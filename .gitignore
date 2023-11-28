@@ -1,6 +1,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/jetbrains+all,visualstudiocode,visualstudio,python,venv,jupyternotebooks,django,flask
 # Edit at https://www.toptal.com/developers/gitignore?templates=jetbrains+all,visualstudiocode,visualstudio,python,venv,jupyternotebooks,django,flask
 
+data/*
+
 ### Django ###
 *.log
 *.pot
