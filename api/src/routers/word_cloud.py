@@ -20,6 +20,7 @@ class WordCloudController(Controller):
 
     @get(path="/votes")
     async def list_animal_votes(self) -> list[AnimalVoteCount]:
+
         return [AnimalVoteCount(word="elephant", votes=5), AnimalVoteCount(word="cow", votes=3)]
 
     @post(path="/votes")
