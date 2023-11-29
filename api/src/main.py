@@ -1,6 +1,6 @@
 from litestar import Litestar
 
-from api.routers import create_router
+from api.src.routers import create_router
 
 
 def create_app() -> Litestar:

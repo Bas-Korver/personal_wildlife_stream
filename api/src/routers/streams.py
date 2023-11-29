@@ -1,15 +1,11 @@
-from litestar import Controller, get, post, put, patch, delete
-from litestar.dto import DTOData
-from pydantic import UUID4
-from api.models.word_cloud import AnimalVoteCount, UserVote, AnimalsCloud
-from api.db_connections.redis_connection import RedisConnection
+from litestar import Controller, get
 from litestar.exceptions import HTTPException
+
+from api.src.db.redis_connection import RedisConnection
 
 r = RedisConnection().get_redis_client()
 
-urls = [
-    "https://www.youtube.com/watch?v=HsLvnFQW_yM",
-    "https://www.youtube.com/watch?v=Ihr_nwydXi0",
+urls = ["https://www.youtube.com/watch?v=HsLvnFQW_yM", "https://www.youtube.com/watch?v=Ihr_nwydXi0",
     "https://www.youtube.com/watch?v=yPSYdCWRWFA"]
 
 

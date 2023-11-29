@@ -1,7 +1,7 @@
 from litestar import Controller, get, post
 
-from api.db_connections.redis_connection import RedisConnection
-from api.models.word_cloud import AnimalVoteCount, UserVote, AnimalsCloud
+from api.src.db.redis_connection import RedisConnection
+from api.src.models.word_cloud import AnimalVoteCount, UserVote, AnimalsCloud
 
 r = RedisConnection().get_redis_client()
 
