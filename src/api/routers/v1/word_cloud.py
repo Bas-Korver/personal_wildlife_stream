@@ -1,10 +1,9 @@
 from litestar import Controller, get, post
 
-from api.src.db.redis_connection import RedisConnection
-from api.src.models.word_cloud import AnimalVoteCount, UserVote, AnimalsCloud
+from db.redis_connection import RedisConnection
+from models.word_cloud_model import AnimalVoteCount, UserVote, AnimalsCloud
 
 r = RedisConnection().get_redis_client()
-
 
 class WordCloudController(Controller):
     path = "/word-cloud"
@@ -20,7 +19,6 @@ class WordCloudController(Controller):
 
     @get(path="/votes")
     async def list_animal_votes(self) -> list[AnimalVoteCount]:
-
         return [AnimalVoteCount(word="elephant", votes=5), AnimalVoteCount(word="cow", votes=3)]
 
     @post(path="/votes")

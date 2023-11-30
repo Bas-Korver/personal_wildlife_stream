@@ -1,7 +1,8 @@
 from litestar import Controller, get
 from litestar.exceptions import HTTPException
 
-from api.src.db.redis_connection import RedisConnection
+from db.redis_connection import RedisConnection
+
 
 r = RedisConnection().get_redis_client()
 
