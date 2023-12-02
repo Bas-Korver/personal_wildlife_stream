@@ -2,7 +2,7 @@ import os
 import numpy as np
 import cv2
 
-from ..utils import get_frames_from_video
+from src.utils.frame_extractor import get_frames_from_video
 
 STREAM_DOWNLOAD_LOCATION = "../stream_downloader/streams"
 
