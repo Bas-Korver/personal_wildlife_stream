@@ -16,6 +16,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Check if formatting is needed
         uses: psf/black@stable
+        continue-on-error: true
         with:
           options: "--check -t py310 -t py311"
           src: "./src"
@@ -33,13 +34,12 @@ jobs:
         if: ${{ failure() }}
         uses: EndBug/add-and-commit@v9
         with:
-          # default_author: github_actions
           committer_name: GitHub Actions
           committer_email: 41898282+github-actions[bot]@users.noreply.github.com
           # author_name: ${{ github.actor }}
           # author_email: ${{ github.actor }}@users.noreply.github.com
           add: "./src"
-          message: "Ran Black formatted on python code in ./src/\n\nThere appeared to be some python formatting in ${{ github.sha }} that did not conform with Black's formatting standards. So [Black](https://github.com/psf/black) formatter was used to fix these issues."
+          message: "Ran Black formatted on python code in ./src/\n\nThere appeared to be some python formatting in ${{ github.sha }} that did not conform with Black's formatting standards. So Black(https://github.com/psf/black) formatter was used to fix these issues."
           
         # uses: peter-evans/create-pull-request@v5
         # with:
