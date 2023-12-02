@@ -31,14 +31,21 @@ jobs:
           version: "~= 23.11"
       - name: Create Pull Request
         if: ${{ failure() }}
-        uses: peter-evans/create-pull-request@v5
+        uses: EndBug/add-and-commit@v9
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "Formatted Python code with Black"
-          commit-message: "Ran Black formatted on python code in ./src/"
-          body: |
-            There appeared to be some python formatting in ${{ github.sha }} that did not conform with Black's formatting standards.
-            So [Black](https://github.com/psf/black) formatter was used to fix these issues.
-          base: ${{ github.head_ref }}
-          branch: github-actions/black
+          author_name: ${{ github.actor }}
+          author_email: ${{ github.actor }}@users.noreply.github.com
+          add: "./src"
+          message: "Ran Black formatted on python code in ./src/"
+          
+        # uses: peter-evans/create-pull-request@v5
+        # with:
+        #   token: ${{ secrets.GITHUB_TOKEN }}
+        #   title: "Formatted Python code with Black"
+        #   commit-message: "Ran Black formatted on python code in ./src/"
+        #   body: |
+        #     There appeared to be some python formatting in ${{ github.sha }} that did not conform with Black's formatting standards.
+        #     So [Black](https://github.com/psf/black) formatter was used to fix these issues.
+        #   base: ${{ github.head_ref }}
+        #   branch: github-actions/black
       
