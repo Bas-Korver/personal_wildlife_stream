@@ -6,8 +6,11 @@ from db.redis_connection import RedisConnection
 
 r = RedisConnection().get_redis_client()
 
-urls = ["https://www.youtube.com/watch?v=HsLvnFQW_yM", "https://www.youtube.com/watch?v=Ihr_nwydXi0",
-    "https://www.youtube.com/watch?v=yPSYdCWRWFA"]
+urls = [
+    "https://www.youtube.com/watch?v=HsLvnFQW_yM",
+    "https://www.youtube.com/watch?v=Ihr_nwydXi0",
+    "https://www.youtube.com/watch?v=yPSYdCWRWFA",
+]
 
 
 class StreamsController(Controller):
