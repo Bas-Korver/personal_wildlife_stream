@@ -1,6 +1,12 @@
 name: Black_formatter
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   formatter:
@@ -8,17 +14,31 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - name: Check if formatting is needed
+        uses: psf/black@stable
+        with:
+          options: "--check -t py310 -t py311"
+          src: "./src"
+          jupyter: true
+          version: "~= 23.11"
       - name: Black formatting
+        if: ${{ failure() }}
         uses: psf/black@stable
         with:
           options: "--verbose -t py310 -t py311"
           src: "./src"
           jupyter: true
           version: "~= 23.11"
-      - name: commit changes
-        uses: EndBug/add-and-commit@v9
+      - name: Create Pull Request
+        if: ${{ failure() }}
+        uses: peter-evans/create-pull-request@v5
         with:
-          author_name: ${{ github.actor }}
-          author_email: ${{ github.actor }}@users.noreply.github.com
-          message: "Code formatted with black"
-          add: "./src"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Formatted Python code with Black"
+          commit-message: "Ran Black formatted on python code in ./src/"
+          body: |
+            There appeared to be some python formatting in ${{ github.sha }} that did not conform with Black's formatting standards.
+            So [Black](https://github.com/psf/black) formatter was used to fix these issues.
+          base: ${{ github.head_ref }} # Creates pull request onto pull request or commit branch
+          branch: github-actions/black
+      
