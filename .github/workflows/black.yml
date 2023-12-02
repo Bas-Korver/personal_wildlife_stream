@@ -1,0 +1,15 @@
+name: Black_formatter
+
+on: [push, pull_request]
+
+jobs:
+  formatter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: psf/black@stable
+        with:
+          options: "--check --verbose -t py310 -t py311"
+          src: "./src"
+          jupyter: true
+          version: "~= 23.11"
