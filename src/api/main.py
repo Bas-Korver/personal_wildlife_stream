@@ -8,7 +8,6 @@ def create_app() -> Litestar:
     return Litestar(route_handlers=[create_router()])
 
 
-
 app = create_app()
 
 
