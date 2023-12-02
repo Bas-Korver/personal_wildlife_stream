@@ -15,6 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Check if formatting is needed
+        id: check-format
         uses: psf/black@stable
         continue-on-error: true
         with:
@@ -23,7 +24,8 @@ jobs:
           jupyter: true
           version: "~= 23.11"
       - name: Black formatting
-        if: ${{ failure() }}
+        # if: ${{ failure() }}
+        if: steps.check-format.status == failure()
         uses: psf/black@stable
         with:
           options: "--verbose -t py310 -t py311"
@@ -31,7 +33,8 @@ jobs:
           jupyter: true
           version: "~= 23.11"
       - name: Create Pull Request
-        if: ${{ failure() }}
+        # if: ${{ failure() }}
+        if: steps.check-format.status == failure()
         uses: EndBug/add-and-commit@v9
         with:
           committer_name: GitHub Actions
