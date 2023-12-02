@@ -4,7 +4,6 @@ import uvicorn
 from routers import create_router
 
 
-
 def create_app() -> Litestar:
     return Litestar(route_handlers=[create_router()])
 
