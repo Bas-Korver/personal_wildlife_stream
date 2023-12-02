@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 import redis
 from redis.exceptions import ConnectionError
 
+
 class Settings(BaseSettings):
     API_KEY: str
     REDIS_HOST: str = "localhost"
@@ -12,20 +13,23 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def check_working_reddis_connection(self):
-        r = redis.Redis(host=self.REDIS_HOST,
-                        port=self.REDIS_PORT,
-                        username=self.REDIS_USERNAME,
-                        password=self.REDIS_PASSWORD
-                        )
+        r = redis.Redis(
+            host=self.REDIS_HOST,
+            port=self.REDIS_PORT,
+            username=self.REDIS_USERNAME,
+            password=self.REDIS_PASSWORD,
+        )
         try:
             r.ping()
         except ConnectionError as e:
-            raise ValueError(f"{e}\nEither the defined Redis server is offline or one of the values is incorrect.")
+            raise ValueError(
+                f"{e}\nEither the defined Redis server is offline or one of the values is incorrect."
+            )
         else:
             r.close()
 
 
 try:
-    settings = Settings(_env_file='./.env')
+    settings = Settings(_env_file="./.env")
 except ValidationError as e:
     print(e)

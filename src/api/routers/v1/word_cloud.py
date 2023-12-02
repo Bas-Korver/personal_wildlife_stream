@@ -5,6 +5,7 @@ from models.word_cloud_model import AnimalVoteCount, UserVote, AnimalsCloud
 
 r = RedisConnection().get_redis_client()
 
+
 class WordCloudController(Controller):
     path = "/word-cloud"
 
@@ -19,7 +20,10 @@ class WordCloudController(Controller):
 
     @get(path="/votes")
     async def list_animal_votes(self) -> list[AnimalVoteCount]:
-        return [AnimalVoteCount(word="elephant", votes=5), AnimalVoteCount(word="cow", votes=3)]
+        return [
+            AnimalVoteCount(word="elephant", votes=5),
+            AnimalVoteCount(word="cow", votes=3),
+        ]
 
     @post(path="/votes")
     async def set_user_vote(self, data: UserVote) -> UserVote:
