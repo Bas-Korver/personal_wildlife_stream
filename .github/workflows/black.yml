@@ -25,7 +25,7 @@ jobs:
           version: "~= 23.11"
       - name: Black formatting
         # if: ${{ failure() }}
-        if: steps.check-format.status == failure()
+        if: steps.check-format.outcome == 'failure'
         uses: psf/black@stable
         with:
           options: "--verbose -t py310 -t py311"
@@ -34,7 +34,7 @@ jobs:
           version: "~= 23.11"
       - name: Create Pull Request
         # if: ${{ failure() }}
-        if: steps.check-format.status == failure()
+        if: steps.check-format.outcome == 'failure'
         uses: EndBug/add-and-commit@v9
         with:
           committer_name: GitHub Actions
