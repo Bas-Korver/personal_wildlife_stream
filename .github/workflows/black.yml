@@ -6,10 +6,19 @@ jobs:
   formatter:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: psf/black@stable
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Black formatting
+        uses: psf/black@stable
         with:
           options: "--verbose -t py310 -t py311"
           src: "./src"
           jupyter: true
           version: "~= 23.11"
+      - name: commit changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: ${{ github.actor }}
+          author_email: ${{ github.actor }}@users.noreply.github.com
+          message: "Code formatted with black"
+          add: "./src"
