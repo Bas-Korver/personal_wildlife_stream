@@ -21,9 +21,9 @@ STREAM_DOWNLOAD_TIME = 10
 STREAM_DOWNLOAD_LOCATION = "./streams"
 
 
-# class StreamDownloadThread(threading.Thread):
-#     def __init__(self, url: str, save_dir: pathlib) -> None:
-#         super().__init__()
+class StreamDownloadThread(threading.Thread):
+    def __init__(self, url: str, save_dir: pathlib) -> None:
+        super().__init__()
 
 
 def download_streams():

@@ -1,15 +1,19 @@
+from typing import Any
+
 from pydantic import ValidationError, model_validator
 from pydantic_settings import BaseSettings
 import redis
+from typing import List
 from redis.exceptions import ConnectionError
 
 
 class Settings(BaseSettings):
-    API_KEY: str
+    API_KEY: str | None = None
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_USERNAME: str | None = None
     REDIS_PASSWORD: str | None = None
+    CORS_ALLOWED_ORIGINS: List[str] = []
 
     @model_validator(mode="after")
     def check_working_reddis_connection(self):
@@ -30,6 +34,6 @@ class Settings(BaseSettings):
 
 
 try:
-    settings = Settings(_env_file="./.env")
+    settings = Settings(_env_file=".env")
 except ValidationError as e:
     print(e)

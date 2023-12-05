@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-
 class AnimalVoteCount(BaseModel):
     animal: str
     votes: int
