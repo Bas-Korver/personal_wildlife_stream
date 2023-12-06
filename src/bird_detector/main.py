@@ -21,9 +21,7 @@ def detect_birds(arguments):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-      prog="birds_detector"
-    )
+    parser = argparse.ArgumentParser(prog="birds_detector")
 
     parser.add_argument("-i", "--input", required=True)
     parser.add_argument("-c", "--confidence", type=float, default=0.5)
