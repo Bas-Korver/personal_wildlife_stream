@@ -3,7 +3,6 @@ from typing import Any
 from pydantic import ValidationError, model_validator
 from pydantic_settings import BaseSettings
 import redis
-from typing import List
 from redis.exceptions import ConnectionError
 
 
@@ -13,7 +12,7 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_USERNAME: str | None = None
     REDIS_PASSWORD: str | None = None
-    CORS_ALLOWED_ORIGINS: List[str] = []
+    CORS_ALLOWED_ORIGINS: list[str] = []
 
     @model_validator(mode="after")
     def check_working_reddis_connection(self):
