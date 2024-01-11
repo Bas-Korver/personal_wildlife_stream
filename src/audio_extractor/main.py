@@ -2,9 +2,9 @@ import subprocess
 import argparse
 
 
-def extract_audio(arguments):
+def extract_audio(input_file, output_file):
     subprocess.run(
-        ["ffmpeg", "-i", arguments.input, "-q:a", "0", "-map", "a", arguments.output],
+        ["ffmpeg", "-i", input_file, "-q:a", "0", "-map", "a", output_file],
         check=True,
     )
 
@@ -15,4 +15,6 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input", required=True)
     parser.add_argument("-o", "--output", required=True)
 
-    extract_audio(parser.parse_args())
+    arguments = parser.parse_args()
+
+    extract_audio(arguments.input, arguments.output)

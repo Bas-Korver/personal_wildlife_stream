@@ -1,6 +1,4 @@
-import subprocess
 import argparse
-from datetime import datetime
 
 from birdnetlib import Recording
 from birdnetlib.analyzer import Analyzer
@@ -17,7 +15,16 @@ def detect_birds(arguments):
 
     recording.analyze()
 
-    print(recording.detections)
+    return list(
+        map(
+            lambda detection: {
+                **detection,
+                "label": "bird",
+                "label_specific": detection["label"],
+            },
+            recording.detections,
+        )
+    )
 
 
 if __name__ == "__main__":
