@@ -3,7 +3,12 @@ import pathlib
 import subprocess
 import threading
 
+from yt_dlp.utils import DownloadError
+import picologging
+
 import yt_dlp
+
+picologging.basicConfig(level=picologging.DEBUG)
 
 YDL = yt_dlp.YoutubeDL(
     {
@@ -12,18 +17,14 @@ YDL = yt_dlp.YoutubeDL(
     }
 )
 
+# TODO: Make this an api call.
 YOUTUBE_URLS = [
-    "https://www.youtube.com/watch?v=HsLvnFQW_yM",
     "https://www.youtube.com/watch?v=Ihr_nwydXi0",
     "https://www.youtube.com/watch?v=yPSYdCWRWFA",
 ]
+
 STREAM_DOWNLOAD_TIME = 10
 STREAM_DOWNLOAD_LOCATION = "./streams"
-
-
-class StreamDownloadThread(threading.Thread):
-    def __init__(self, url: str, save_dir: pathlib) -> None:
-        super().__init__()
 
 
 def download_streams():
@@ -46,7 +47,7 @@ def download_streams():
     for thread in threads:
         thread.start()
 
-    print("[!] Started all threads for stream download.")
+    picologging.info("Started all threads for stream download.")
 
 
 def download_stream(stream: str, save_path: str = "./streams", time: int = 10):
@@ -57,7 +58,11 @@ def download_stream(stream: str, save_path: str = "./streams", time: int = 10):
     :param save_path: path where to save the downloaded stream.
     :param time: time in seconds for intervals of stream save.
     """
-    video_information = YDL.extract_info(stream, download=False)
+    try:
+        video_information = YDL.extract_info(stream, download=False)
+    except DownloadError:
+        picologging.warning(f"Error while extracting video information")
+        return
 
     video_id = video_information["id"]
     video_url = video_information["url"]
@@ -81,6 +86,9 @@ def download_stream(stream: str, save_path: str = "./streams", time: int = 10):
             "segment",
             "-strftime",
             "1",
+            "-hide_banner",
+            "-loglevel",
+            "warning",
             f"{save_path}/{video_id}/%Y%m%d_%H%M%S.mp4",
         ]
     )
