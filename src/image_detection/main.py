@@ -3,11 +3,11 @@ import torch
 
 # Initialize model.
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-MODEL = torch.hub.load("ultralytics/yolov5", "custom", "./model_weights.pt")
+MODEL = torch.hub.load("ultralytics/yolov5", "custom", "./best.pt")
 MODEL.to(DEVICE)
 
 
-def image_detection(frames: list, confidence: float = 0.2):
+def image_detection(frames: list, confidence: float = 0.7):
     """
 
     :param confidence:
