@@ -18,8 +18,8 @@ class FileCreatedHandler(FileSystemEventHandler):
 
     @staticmethod
     def write_to_redis(path: pathlib.Path):
-        r.lrem("queue:stream_data_extractor", 0, str(path))
-        r.lpush("queue:stream_data_extractor", str(path))
+        r.lrem("queue:video_data_extractor", 0, str(path))
+        r.lpush("queue:video_data_extractor", str(path))
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import pathlib
 import platform
 import shutil
 import signal
@@ -56,7 +57,8 @@ def cleanup():
             break
 
     for item in settings.SAVE_PATH.iterdir():
-        shutil.rmtree(item)
+        if item.is_dir():
+            shutil.rmtree(item)
 
     for key in r.scan_iter("queue:*"):
         r.delete(key)
