@@ -12,6 +12,7 @@ from core.config import settings
 from db.redis_connection import RedisConnection
 from downloader import DownloadThread
 from file_watcher import FileCreatedHandler
+from queue_handler import QueueHandler
 
 r = RedisConnection().get_redis_client()
 picologging.basicConfig(level=settings.PROGRAM_LOG_LEVEL)
@@ -20,11 +21,17 @@ event = Event()
 # TODO: Make this an api call.
 YOUTUBE_URLS = [
     "https://www.youtube.com/watch?v=yPSYdCWRWFA",
+    "https://www.youtube.com/watch?v=DsNtwGJXTTs",
+    "https://www.youtube.com/watch?v=O52zDyxg5QI",
+    "https://www.youtube.com/watch?v=wF_ytZyrW3w",
+    "https://www.youtube.com/watch?v=k9Jlhqu_a_Q",
+    "https://www.youtube.com/watch?v=Lf5t_JJTO00",
 ]
 
 
 def start_download_threads():
     threads = []
+
     for youtube_url in YOUTUBE_URLS:
         thread = DownloadThread(youtube_url, event)
         threads.append(thread)
@@ -49,10 +56,14 @@ def start_file_watcher():
 
 
 def start_queue_handler():
-    from queue_handler import QueueHandler
+    threads = []
 
-    queue_handler = QueueHandler(event)
-    queue_handler.start()
+    for _ in YOUTUBE_URLS:
+        thread = QueueHandler(event)
+        threads.append(thread)
+
+    for thread in threads:
+        thread.start()
 
     picologging.info("Started queue handler.")
 

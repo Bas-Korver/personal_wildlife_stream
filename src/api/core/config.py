@@ -24,7 +24,7 @@ class Settings(BaseSettings):
         )
         try:
             r.ping()
-        except ConnectionError as e:
+        except (ConnectionError, TimeoutError) as e:
             raise ValueError(
                 f"{e}\nEither the defined Redis server is offline or one of the values is incorrect."
             )
