@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     VIDEO_SEGMENT_TIME: int = 10
     SAVE_PATH: DirectoryPath
-    DOWNLOADER_LOG_LEVEL: int = picologging.NOTSET
+    PROGRAM_LOG_LEVEL: int = picologging.NOTSET
     FFMPEG_LOG_LEVEL: int = 32
 
     REDIS_HOST: str = "localhost"
@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     REDIS_USERNAME: str | None = None
     REDIS_PASSWORD: str | None = None
 
-    @field_validator("DOWNLOADER_LOG_LEVEL", mode="before")
+    @field_validator("PROGRAM_LOG_LEVEL", mode="before")
     @classmethod
     def validate_downloader_debug_level(cls, v) -> int:
         levels = {
@@ -57,7 +57,7 @@ class Settings(BaseSettings):
         )
         try:
             r.ping()
-        except ConnectionError as e:
+        except (ConnectionError, TimeoutError) as e:
             raise ValueError(
                 f"{e}\nEither the defined Redis server is offline or one of the values is incorrect."
             )

@@ -14,12 +14,11 @@ from downloader import DownloadThread
 from file_watcher import FileCreatedHandler
 
 r = RedisConnection().get_redis_client()
-picologging.basicConfig(level=settings.DOWNLOADER_LOG_LEVEL)
+picologging.basicConfig(level=settings.PROGRAM_LOG_LEVEL)
 event = Event()
 
 # TODO: Make this an api call.
 YOUTUBE_URLS = [
-    "https://www.youtube.com/watch?v=Ihr_nwydXi0",
     "https://www.youtube.com/watch?v=yPSYdCWRWFA",
 ]
 
@@ -46,6 +45,17 @@ def start_file_watcher():
     observer.schedule(event_handler, settings.SAVE_PATH, recursive=True)
     observer.start()
 
+    picologging.info("Started file watcher.")
+
+
+def start_queue_handler():
+    from queue_handler import QueueHandler
+
+    queue_handler = QueueHandler(event)
+    queue_handler.start()
+
+    picologging.info("Started queue handler.")
+
 
 def cleanup():
     picologging.info(
@@ -62,6 +72,10 @@ def cleanup():
 
     for key in r.scan_iter("queue:*"):
         r.delete(key)
+
+    for key in r.scan_iter("video_information:*"):
+        r.delete(key)
+
     event.set()
 
 
@@ -78,5 +92,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, handler)
 
     start_file_watcher()
+
+    start_queue_handler()
 
     start_download_threads()

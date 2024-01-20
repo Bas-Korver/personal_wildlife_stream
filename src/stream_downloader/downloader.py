@@ -71,7 +71,7 @@ class DownloadThread(threading.Thread):
                 ]
             )
             exit_code = output.returncode
-            if exit_code != 0:
+            if exit_code != 0 and not self.event.is_set():
                 picologging.error(
                     f"Error while downloading stream retrying in 60 seconds."
                 )
