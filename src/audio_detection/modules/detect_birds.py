@@ -1,0 +1,32 @@
+import argparse
+import os
+from datetime import datetime
+
+from birdnetlib import Recording
+from birdnetlib.analyzer import Analyzer
+from core.config import settings
+
+
+def detect_birds(audio_path: str | os.PathLike) -> list[dict]:
+    analyzer = Analyzer()
+
+    # TODO: longitude and latitude to birdnetlib.Recording for a more accurate result.
+    recording = Recording(
+        analyzer,
+        audio_path,
+        date=datetime.today(),
+        min_conf=settings.MODEL_CONFIDENCE,
+    )
+
+    recording.analyze()
+
+    return list(
+        map(
+            lambda detection: {
+                **detection,
+                "label": "bird",
+                "label_specific": detection["label"],
+            },
+            recording.detections,
+        )
+    )
