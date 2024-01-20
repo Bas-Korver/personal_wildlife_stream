@@ -875,7 +875,8 @@ FodyWeavers.xsd
 
 # End of https://www.toptal.com/developers/gitignore/api/jetbrains+all,visualstudiocode,visualstudio,python,venv,jupyternotebooks,django,flask
 
-audios/**
-streams/**
-!audios/.gitkeep
+src/audios/**
+src/streams/**
+!src/audios/.gitkeep
 !streams/.gitkeep
+src/image_detection/models/**
