@@ -1,9 +1,9 @@
-import argparse
 import os
 from datetime import datetime
 
 from birdnetlib import Recording
 from birdnetlib.analyzer import Analyzer
+
 from core.config import settings
 
 

@@ -1,8 +1,6 @@
-import os
 from dataclasses import dataclass
 
 import structlog
-import colorama
 
 
 @dataclass
@@ -11,17 +9,15 @@ class SomeClass:
     y: str
 
 
-structlog.stdlib.recreate_defaults()  # so we have logger names
+structlog.stdlib.recreate_defaults(log_level=None)  # so we have logger names
 
-
-log = structlog.get_logger("some_logger")
+log = structlog.stdlib.get_logger("some_logger")
 
 log.debug("debugging is hard", a_list=[1, 2, 3])
 log.info("informative!", some_key="some_value")
 log.warning("uh-uh!")
 log.error("omg", a_dict={"a": 42, "b": "foo"})
 log.critical("wtf", what=SomeClass(x=1, y="z"))
-
 
 log2 = structlog.get_logger("another_logger")
 

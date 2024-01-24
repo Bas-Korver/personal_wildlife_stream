@@ -3,9 +3,9 @@ import pathlib
 import threading
 
 import cv2
-import picologging
+import structlog
 
-logger = picologging.getLogger("extract_video_data.frame_extractor")
+logger = structlog.get_logger()
 
 
 def get_frames_from_video(

@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "stream-downloader"
+version = "0.1.0"
+description = "Downloads YouTube livestreams."
+authors = [
+    "Bas Körver <bas_korver@outlook.com>",
+    "CedricCortenraede <c.cortenraede@outlook.com>",
+    "cemysh <tcvetkovanna@gmail.com>",
+    "Jules Zeelen <jules.zeelen@hotmail.nl>",
+    "KSandfort <konstantin.sandfort@gmail.com>",
+    "Muradohi <muradohi96@gmail.com>",
+]
+license = "GPL-3.0-only"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+structlog = "^24.1.0"
+redis = "^5.0.1"
+pydantic-settings = "^2.1.0"
+opencv-python = "^4.9.0.80"
+watchdog = "^3.0.0"
+yt-dlp = "^2023.12.30"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

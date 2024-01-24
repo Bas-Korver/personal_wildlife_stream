@@ -1,14 +1,19 @@
 import sys
 
-import picologging
+import logging
 import redis
+import structlog
 from pydantic import field_validator, ValidationError, model_validator
 from pydantic_settings import BaseSettings
 
+logger = structlog.get_logger()
+
 
 class Settings(BaseSettings):
-    PROGRAM_LOG_LEVEL: int = picologging.INFO
-    THREAD_COUNT: int = 5
+    PROGRAM_LOG_LEVEL: int = logging.INFO
+    THREAD_COUNT: int = (
+        5  # TODO: make default equal to number of streams that are being processed.
+    )
 
     MODEL_CONFIDENCE: float = 0.7
     DETECT_AUDIO_ONLY_AFTER_MOTION: bool = False
@@ -22,11 +27,11 @@ class Settings(BaseSettings):
     @classmethod
     def validate_downloader_debug_level(cls, v) -> int:
         levels = {
-            "critical": picologging.CRITICAL,
-            "error": picologging.ERROR,
-            "warning": picologging.WARNING,
-            "info": picologging.INFO,
-            "debug": picologging.DEBUG,
+            "critical": logging.CRITICAL,
+            "error": logging.ERROR,
+            "warning": logging.WARNING,
+            "info": logging.INFO,
+            "debug": logging.DEBUG,
         }
 
         return levels.get(v, v)
@@ -52,5 +57,5 @@ class Settings(BaseSettings):
 try:
     settings = Settings(_env_file=".env")
 except ValidationError as e:
-    print(e)
+    logger.exception(e)
     sys.exit(1)

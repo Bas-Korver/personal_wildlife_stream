@@ -1,12 +1,10 @@
-from litestar import Litestar
 import uvicorn
+from litestar import Litestar
 from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
-from litestar.openapi.spec import Components, SecurityScheme, Tag
+from litestar.openapi.spec import Components, SecurityScheme
 
 from core.config import settings
-
-
 from routers import create_router
 
 
@@ -29,7 +27,6 @@ def create_app() -> Litestar:
 
 
 app = create_app()
-
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True, reload_dirs="./")

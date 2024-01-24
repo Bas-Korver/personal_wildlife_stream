@@ -2,7 +2,7 @@ import glob
 import pathlib
 from datetime import datetime, timedelta
 
-import picologging
+import logging
 from redis.commands.json.path import Path
 
 from core.config import settings
@@ -165,7 +165,3 @@ def check_if_stream_chosen():
         return data["data"]
 
     return None
-
-
-if __name__ == "__main__":
-    select_streams()

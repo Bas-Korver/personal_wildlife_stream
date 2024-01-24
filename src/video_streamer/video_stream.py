@@ -2,19 +2,17 @@ import platform
 import signal
 import threading
 
-import picologging
+import structlog
 
 from core.config import settings
 from db.redis_connection import RedisConnection
 from modules.file_streamer import start_stream_file
-from modules.streamer import start_stream
 from modules.stream_selector import select_streams
+from modules.streamer import start_stream
 
 r = RedisConnection().get_redis_client()
-picologging.basicConfig(
-    level=settings.PROGRAM_LOG_LEVEL,
-    format="%(levelname)s - %(name)s - Line: %(lineno)d - Thread: %(thread)d - %(message)s",
-)
+structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
+logger = structlog.get_logger()
 event = threading.Event()
 p_streamer = r.pubsub(ignore_subscribe_messages=True)
 p_streamer.subscribe("streamer")
@@ -29,7 +27,7 @@ def start_threads():
         args=(settings.STREAM_KEY.get_secret_value(), settings.FFMPEG_LOG_LEVEL),
     )
 
-    picologging.debug("Starting stream selector thread.")
+    logger.debug("Starting stream selector thread.")
     stream_selector_thread.start()
 
     while True:
@@ -41,11 +39,11 @@ def start_threads():
             event.wait(3)
             continue
 
-        picologging.debug(f"Received data from streamer: {data}")
+        logger.debug(f"Received data from streamer: {data}")
         if data["data"] == "start_streaming":
             break
 
-    picologging.info("Starting file streamer thread.")
+    logger.info("Starting file streamer thread.")
     # file_streamer_thread.start()
 
     # Wait to start streamer, this will allow the file_streamer_thread to create a backlog.
@@ -59,7 +57,7 @@ def start_threads():
 
 
 def handler(signum, frame):
-    picologging.info(f"Interrupted by {signum}, shutting down")
+    logger.info(f"Interrupted by {signum}, shutting down")
     event.set()
 
 

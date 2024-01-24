@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "motion-detection"
+version = "0.1.0"
+description = "Detects if there is motion in the extracted frames by applying frame differencing."
+authors = [
+    "Bas Körver <bas_korver@outlook.com>",
+    "CedricCortenraede <c.cortenraede@outlook.com>",
+    "cemysh <tcvetkovanna@gmail.com>",
+    "Jules Zeelen <jules.zeelen@hotmail.nl>",
+    "KSandfort <konstantin.sandfort@gmail.com>",
+    "Muradohi <muradohi96@gmail.com>",
+]
+license = "GPL-3.0-only"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+structlog = "^24.1.0"
+redis = "^5.0.1"
+pydantic-settings = "^2.1.0"
+opencv-python = "^4.9.0.80"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

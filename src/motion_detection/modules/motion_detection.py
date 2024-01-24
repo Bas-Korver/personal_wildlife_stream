@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
-import picologging
+import structlog
 
 # Global variables
-logger = picologging.getLogger("detect_motion.motion_detection")
+logger = structlog.get_logger()
 
 
 def motion_detection(

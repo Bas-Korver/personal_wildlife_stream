@@ -1,0 +1,11 @@
+redis~=5.0.1
+pydantic~=2.5.3
+litestar~=2.5.0
+uvicorn~=0.26.0
+structlog~=24.1.0
+picologging~=0.9.3
+birdnetlib~=0.13.2
+opencv-python~=4.9.0.80
+numpy~=1.26.3
+watchdog~=2.1.9
+pillow~=10.2.0

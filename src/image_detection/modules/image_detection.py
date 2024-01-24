@@ -1,6 +1,4 @@
-import torch
 import torch.nn as nn
-from core.config import settings
 
 
 def image_detection(model: nn.Module, frames: list, confidence: float = 0.7) -> dict:

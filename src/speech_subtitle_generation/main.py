@@ -1,10 +1,8 @@
 import numpy as np
-from config import Settings
 from PIL import Image
-from transformers import pipeline
-from TTS.config import load_config
-from TTS.utils.manage import ModelManager
 from TTS.utils.synthesizer import Synthesizer
+from config import Settings
+from transformers import pipeline
 
 # Initialize caption model.
 CAPTIONER = pipeline("image-to-text", model=Settings.CAPTION_MODEL)  # TODO: Add device.

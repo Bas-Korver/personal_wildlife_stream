@@ -2,11 +2,11 @@ import os
 import pathlib
 import subprocess
 
-import picologging
+import structlog
 
 from core.config import settings
 
-logger = picologging.getLogger("extract_video_data.audio_extractor")
+logger = structlog.get_logger()
 
 
 def extract_audio(video_path: str | os.PathLike):

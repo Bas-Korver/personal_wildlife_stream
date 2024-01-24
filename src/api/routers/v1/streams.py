@@ -4,8 +4,6 @@ from litestar.exceptions import *
 
 from db.redis_connection import RedisConnection
 
-from core.guards import authenticate
-
 # Global variables.
 r = RedisConnection().get_redis_client()
 

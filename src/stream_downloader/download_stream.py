@@ -4,9 +4,7 @@ import signal
 import threading
 from threading import Event
 
-import picologging
 import structlog
-import colorama
 from watchdog.observers import Observer
 
 from core.config import settings
@@ -17,22 +15,59 @@ from modules.queue_handler import QueueHandler
 
 # Global variables
 r = RedisConnection().get_redis_client()
-structlog.stdlib.recreate_defaults()
+structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
 logger = structlog.get_logger()
 event = Event()
 
 # TODO: Make this an API call.
 YOUTUBE_URLS = [
-    "https://www.youtube.com/watch?v=yPSYdCWRWFA",
-    "https://www.youtube.com/watch?v=DsNtwGJXTTs",
-    "https://www.youtube.com/watch?v=O52zDyxg5QI",
-    "https://www.youtube.com/watch?v=wF_ytZyrW3w",
-    "https://www.youtube.com/watch?v=k9Jlhqu_a_Q",
-    "https://www.youtube.com/watch?v=Lf5t_JJTO00",
-    "https://www.youtube.com/watch?v=yfSyjwY6zSQ",
-    "https://www.youtube.com/watch?v=ZFuWYnuu9I8",
-    "https://www.youtube.com/watch?v=VUJbDTIYlM4",
-    "https://www.youtube.com/watch?v=5e4lsEe4Vew",
+    "https://youtu.be/DsNtwGJXTTs",
+    "https://youtu.be/Ihr_nwydXi0",
+    "https://youtu.be/og8bbxl0iW8",
+    "https://youtu.be/4ElanH9Gzjw",
+    "https://youtu.be/9pmsuKWKf90",
+    "https://youtu.be/LTz8tav2SCw",
+    "https://youtu.be/IVmL3diwJuw",
+    "https://youtu.be/StGk_2DA5ig",
+    "https://youtu.be/VUJbDTIYlM4",
+    "https://youtu.be/3MlJEXOZTfo",
+    "https://youtu.be/_NXaovxB-Bk",
+    "https://youtu.be/yfSyjwY6zSQ",
+    "https://youtu.be/KyQAB-TKOVA",
+    "https://youtu.be/O8xVFhgEv6Q",
+    "https://youtu.be/xWygD7kHTbY",
+    "https://youtu.be/yPSYdCWRWFA",
+    "https://youtu.be/jzx_n25g3kA",
+    "https://youtu.be/Kf-x20Yq0_A",
+    "https://youtu.be/Zern27X95Hg",
+    "https://youtu.be/T-iBupPtIFw",
+    "https://youtu.be/ydYDqZQpim8",
+    "https://youtu.be/E8ecY79xDME",
+    "https://youtu.be/kvEiF-TGXOQ",
+    "https://youtu.be/OMlf71t2oV0",
+    "https://youtu.be/-vK6dVJ7erU",
+    "https://youtu.be/VfFfS64rtZE",
+    "https://youtu.be/39uYW98qOV0",
+    "https://youtu.be/cKe0WSZKYgQ",
+    "https://youtu.be/Cq2qCph6Lx8",
+    "https://youtu.be/tn2LAEtFNbo",
+    "https://youtu.be/S4GIPXZnQTM",
+    "https://youtu.be/eZysNmy7dWI",
+    "https://youtu.be/I113nq5PmK4",
+    "https://youtu.be/wF_ytZyrW3w",
+    "https://youtu.be/ZFuWYnuu9I8",
+    "https://youtu.be/ItdXaWUVF48",
+    "https://youtu.be/5e4lsEe4Vew ",
+    "https://youtu.be/pZZst4BOpVI",
+    "https://youtu.be/1zcIUk66HX4",
+    "https://youtu.be/Sq-X4Ga1oyc",
+    "https://youtu.be/QkWGGhtTA4k",
+    "https://youtu.be/Lv9t0hZTvz4",
+    "https://youtu.be/2swy9gysvOY",
+    "https://youtu.be/DRxYSIoBusQ",
+    "https://youtu.be/fvDXyApZjzo",
+    "https://youtu.be/OsH_Z88b1UU",
+    "https://youtu.be/7l2JMZRjgdU",
 ]
 
 

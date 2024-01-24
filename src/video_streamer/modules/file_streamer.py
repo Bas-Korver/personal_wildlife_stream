@@ -1,8 +1,8 @@
 import pathlib
-import time
 import subprocess
+import time
 
-import picologging
+import structlog
 
 from core.config import settings
 from db.redis_connection import RedisConnection
@@ -10,10 +10,8 @@ from db.redis_connection import RedisConnection
 # Global variables.
 VIDEO_ITERATION_DELAY = 8.5  # TODO: Test with delay make configurable.
 r = RedisConnection().get_redis_client()
-picologging.basicConfig(
-    level=settings.PROGRAM_LOG_LEVEL,
-    format="%(levelname)s - %(name)s - Line: %(lineno)d - Thread: %(thread)d - %(message)s",
-)
+structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
+logger = structlog.get_logger()
 p_stream_selector = r.pubsub(ignore_subscribe_messages=True)
 p_stream_selector.subscribe("stream_selector")
 p_streamer = r.pubsub(ignore_subscribe_messages=True)
@@ -44,7 +42,7 @@ def start_stream_file(event):
 
     while True:
         if event.is_set():
-            picologging.debug("Stopping video stream as event is set.")
+            logger.debug("Stopping video stream as event is set.")
             return
         # Note start time of iteration.
         start_time = time.time()
@@ -53,12 +51,10 @@ def start_stream_file(event):
         try:
             video_key = r.brpop("stream_order", 10)[1]
         except TypeError:
-            picologging.debug(
-                "Stopping video stream as no additional videos available."
-            )
+            logger.debug("Stopping video stream as no additional videos available.")
             break
 
-        picologging.debug(f"Got video key: {video_key}")
+        logger.debug(f"Got video key: {video_key}")
         video_source_path = r.json().get(video_key, ".video_path")
 
         # Send message of chosen video.
@@ -109,7 +105,7 @@ def start_stream_file(event):
             ]
         )
 
-        picologging.debug(f"Time needed to add new file: { time.time() - start_time }")
+        logger.debug(f"Time needed to add new file: {time.time() - start_time}")
 
         # Remove intermediate files.
         pathlib.Path(intermediate_file_path).unlink()
@@ -117,5 +113,5 @@ def start_stream_file(event):
 
         # Sleep for remaining time.
         sleep_time = max((0, VIDEO_ITERATION_DELAY - (time.time() - start_time)))
-        picologging.debug(f"Sleeping for {sleep_time} seconds.")
+        logger.debug(f"Sleeping for {sleep_time} seconds.")
         time.sleep(sleep_time)

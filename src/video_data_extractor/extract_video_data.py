@@ -3,7 +3,7 @@ import platform
 import signal
 import threading
 
-import picologging
+import structlog
 from redis.commands.json.path import Path
 
 from core.config import settings
@@ -13,11 +13,8 @@ from modules.frame_extractor import get_frames_from_video
 
 # Global variables
 r = RedisConnection().get_redis_client()
-picologging.basicConfig(
-    level=settings.PROGRAM_LOG_LEVEL,
-    format="%(levelname)s - %(name)s - Line: %(lineno)d - Thread: %(thread)d - %(message)s",
-)
-logger = picologging.getLogger("extract_video_data")
+structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
+logger = structlog.get_logger()
 event = threading.Event()
 lock = threading.Lock()
 

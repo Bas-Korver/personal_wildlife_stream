@@ -1,6 +1,6 @@
 import subprocess
 
-import picologging
+import logging
 
 from db.redis_connection import RedisConnection
 

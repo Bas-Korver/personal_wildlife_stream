@@ -4,21 +4,17 @@ import signal
 import threading
 
 import cv2
-import picologging
+import structlog
 import torch
 
 from core.config import settings
 from db.redis_connection import RedisConnection
 from modules.image_detection import image_detection
-from redis.commands.json.path import Path
 
 # Global variables
 r = RedisConnection().get_redis_client()
-picologging.basicConfig(
-    level=settings.PROGRAM_LOG_LEVEL,
-    format="%(levelname)s - %(name)s - Line: %(lineno)d - Thread: %(thread)d - %(message)s",
-)
-logger = picologging.getLogger("detect_image")
+structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
+logger = structlog.get_logger()
 event = threading.Event()
 
 # Load model

@@ -4,8 +4,7 @@ import signal
 import threading
 
 import cv2
-import picologging
-from redis.commands.json.path import Path
+import structlog
 
 from core.config import settings
 from db.redis_connection import RedisConnection
@@ -13,11 +12,8 @@ from modules.motion_detection import motion_detection
 
 # Global variables
 r = RedisConnection().get_redis_client()
-picologging.basicConfig(
-    level=settings.PROGRAM_LOG_LEVEL,
-    format="%(levelname)s - %(name)s - Line: %(lineno)d - Thread: %(thread)d - %(message)s",
-)
-logger = picologging.getLogger("detect_motion")
+structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
+logger = structlog.get_logger()
 event = threading.Event()
 
 
