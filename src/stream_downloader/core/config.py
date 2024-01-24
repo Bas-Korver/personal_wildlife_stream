@@ -7,10 +7,11 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    PROGRAM_LOG_LEVEL: int = picologging.INFO
+    FFMPEG_LOG_LEVEL: int = 32
+
     VIDEO_SEGMENT_TIME: int = 10
     SAVE_PATH: DirectoryPath
-    PROGRAM_LOG_LEVEL: int = picologging.NOTSET
-    FFMPEG_LOG_LEVEL: int = 32
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379

@@ -2,10 +2,10 @@ import os
 import pathlib
 
 from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
 
 from db.redis_connection import RedisConnection
 
+# Global variables
 r = RedisConnection().get_redis_client()
 
 
@@ -22,5 +22,4 @@ class FileCreatedHandler(FileSystemEventHandler):
     @staticmethod
     def write_to_redis(path: os.PathLike):
         path = pathlib.Path(path)
-        r.lrem("queue:not_finished_video", 0, str(path))
         r.lpush("queue:not_finished_video", str(path))
