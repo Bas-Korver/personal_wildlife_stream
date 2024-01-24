@@ -3,6 +3,7 @@ import subprocess
 import threading
 
 import picologging
+import structlog
 import yt_dlp
 from redis.commands.json.path import Path
 from yt_dlp.utils import DownloadError
@@ -12,8 +13,8 @@ from db.redis_connection import RedisConnection
 
 # Global variables
 r = RedisConnection().get_redis_client()
-logger = picologging.getLogger("download_stream.downloader")
-
+# logger = picologging.getLogger("download_stream.downloader")
+logger = structlog.get_logger()
 YDL = yt_dlp.YoutubeDL(
     {
         "format": "best[ext=mp4]",

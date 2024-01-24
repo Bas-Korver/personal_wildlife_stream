@@ -2,15 +2,15 @@ import sys
 
 import picologging
 import redis
-from pydantic import DirectoryPath, field_validator, ValidationError, model_validator
+from pydantic import field_validator, ValidationError, model_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    MODEL_CONFIDENCE: float = 0.7
-
-    THREAD_COUNT: int = 5
     PROGRAM_LOG_LEVEL: int = picologging.INFO
+    THREAD_COUNT: int = 5
+
+    MODEL_CONFIDENCE: float = 0.7
     DETECT_AUDIO_ONLY_AFTER_MOTION: bool = False
 
     REDIS_HOST: str = "localhost"

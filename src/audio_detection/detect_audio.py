@@ -10,8 +10,13 @@ from core.config import settings
 from db.redis_connection import RedisConnection
 from modules.detect_birds import detect_birds
 
+# Global variables
 r = RedisConnection().get_redis_client()
-picologging.basicConfig(level=settings.PROGRAM_LOG_LEVEL)
+picologging.basicConfig(
+    level=settings.PROGRAM_LOG_LEVEL,
+    format="%(levelname)s - %(name)s - Line: %(lineno)d - Thread: %(thread)d - %(message)s",
+)
+logger = picologging.getLogger("detect_audio")
 event = threading.Event()
 
 
@@ -25,50 +30,58 @@ class AudioDetection(threading.Thread):
             if self.event.is_set():
                 return
 
+            # Check whether to get data after data extraction or after motion detection.
+            if settings.DETECT_AUDIO_ONLY_AFTER_MOTION:
+                key_to_use = "queue:level_2_detection_audio"
+                key_to_clean = "queue:level_1_detection_audio"
+            else:
+                key_to_use = "queue:level_1_detection_audio"
+                key_to_clean = "queue:level_2_detection_audio"
+
             # Get queue element
             try:
-                video_path = pathlib.Path(r.brpop("queue:audio_detection", 10)[1])
+                video_path = pathlib.Path(r.brpop(key_to_use, 10)[1])
             except TypeError:
-                # TODO: this logging statement blocks the thread.
-                # picologging.debug(f"Queue is empty, retrying")
+                logger.debug(f"Queue is empty, retrying")
                 continue
+            else:
+                r.delete(key_to_clean)
 
             # Get directory and filename.
             directory = video_path.parents[0]
             filename = video_path.stem
             youtube_id = video_path.parent.name
 
+            # Load video data from redis.
             data = r.json().get(f"video_information:{youtube_id}:{filename}")
-
-            audio_path = directory / f"{filename}.mp3"
-            detections = detect_birds(audio_path)
 
             new_data = {}
 
-            for detection in detections:
-                new_data[detection["common_name"]] = {
-                    "scientific_name": detection["scientific_name"],
-                    "confidence": round(detection["confidence"], 4),
-                }
+            if bool(data["motion"]) is True:
+                # Detect audio.
+                audio_path = directory / f"{filename}.mp3"
+                detections = detect_birds(audio_path)
 
-            data["audio_detection"] = new_data
+                for detection in detections:
+                    new_data[detection["common_name"]] = {
+                        "scientific_name": detection["scientific_name"],
+                        "confidence": round(detection["confidence"], 4),
+                    }
 
             # Save results.
             r.json().set(
                 f"video_information:{youtube_id}:{filename}",
-                Path.root_path(),
-                data,
+                ".audio_detection",
+                new_data,
             )
 
             # Push to next phase of pipeline.
             r.lrem("queue:video_ranking", 0, str(video_path))
             r.lpush("queue:video_ranking", str(video_path))
 
-            # TODO: Remove audio from disk.
-
 
 def handler(signum, frame):
-    picologging.info(f"Interrupted by {signum}, shutting down")
+    logger.info(f"Interrupted by {signum}, shutting down")
     event.set()
 
 
@@ -85,7 +98,7 @@ if __name__ == "__main__":
     for thread in threads:
         thread.start()
 
-    picologging.info("Started all threads for audio detection.")
+    logger.info("Started all threads for audio detection.")
 
     for thread in threads:
         while thread.is_alive():

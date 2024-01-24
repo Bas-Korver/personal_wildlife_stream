@@ -17,11 +17,8 @@ from modules.queue_handler import QueueHandler
 
 # Global variables
 r = RedisConnection().get_redis_client()
-picologging.basicConfig(
-    level=settings.PROGRAM_LOG_LEVEL,
-    format="%(levelname)s - %(name)s - Line: %(lineno)d - Thread: %(threadName)s - %(message)s",
-)
-logger = picologging.getLogger("download_stream")
+structlog.stdlib.recreate_defaults()
+logger = structlog.get_logger()
 event = Event()
 
 # TODO: Make this an API call.
@@ -110,7 +107,7 @@ def cleanup():
 
 def handler(signum, frame):
     logger.info(
-        "Received a stop signal, shutting down and cleaning up.\nDo not force quit, because this will impede the cleanup process."
+        "Received a stop signal, shutting down and cleaning up. Do not force quit, because this will impede the cleanup process."
     )
     logger.debug(f"Interrupted by {signum}, shutting down")
     event.set()

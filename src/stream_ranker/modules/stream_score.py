@@ -1,21 +1,35 @@
 from core.config import settings
+from db.redis_connection import RedisConnection
+
+r = RedisConnection().get_redis_client()
 
 
-def stream_score(image_detection, audio_detection):
+def stream_score(stream: str, image_detection: dict, audio_detection: dict) -> float:
+    """
+    Calculate the score of a stream.
+    :param stream: YouTube ID of the stream.
+    :param image_detection: dict of image detection results.
+    :param audio_detection: dict of audio detection results.
+    :return: score of the video file.
+    """
+
     # Initialize stream score.
     score = 0
 
     # Decrease the score if it was often chosen recently.
-    decrease_score = 0  # TODO: Decrease score if chosen often save in Redis.
+    decrease_score = r.json().get("stream_information")[stream]
     decrease_score = max(
         [decrease_score, decrease_score - settings.PENALIZE_STREAM_AFTER_TURNS]
-    )  # TODO: Only penalize streams after being chosen a specified amount of times.
+    )
 
     # Negate decrease score on calculated score.
     score -= settings.DECREASE_SCORE_WEIGHT * decrease_score
 
     # Go through audio detection results.
-    # TODO: Audio detection ranking.
+    for animal in audio_detection.keys():
+        confidence = audio_detection[animal]["confidence"]
+
+        score += settings.AUDIO_CONFIDENCE_WEIGHT * confidence
 
     # Go through image detection results.
     for animal in image_detection.keys():
@@ -28,6 +42,6 @@ def stream_score(image_detection, audio_detection):
             (settings.USER_VOTE_WEIGHT * priority)
             + (settings.ANIMAL_COUNT_WEIGHT * count)
             + (settings.ANIMAL_SURFACE_WEIGHT * surface)
-        )  # TODO: maybe device a better scoring heuristic.
+        )
 
     return score

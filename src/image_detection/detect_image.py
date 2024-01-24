@@ -12,9 +12,13 @@ from db.redis_connection import RedisConnection
 from modules.image_detection import image_detection
 from redis.commands.json.path import Path
 
-
+# Global variables
 r = RedisConnection().get_redis_client()
-picologging.basicConfig(level=settings.PROGRAM_LOG_LEVEL)
+picologging.basicConfig(
+    level=settings.PROGRAM_LOG_LEVEL,
+    format="%(levelname)s - %(name)s - Line: %(lineno)d - Thread: %(thread)d - %(message)s",
+)
+logger = picologging.getLogger("detect_image")
 event = threading.Event()
 
 # Load model
@@ -34,8 +38,11 @@ class ImageDetection:
 
             # Get queue element
             try:
-                video_path = pathlib.Path(r.brpop("queue:level_2_detection", 10)[1])
+                video_path = pathlib.Path(
+                    r.brpop("queue:level_2_detection_image", 10)[1]
+                )
             except TypeError:
+                logger.debug(f"Queue is empty, retrying")
                 continue
 
             # Get directory and filename for motion detection.
@@ -63,12 +70,11 @@ class ImageDetection:
                     settings.MODEL_CONFIDENCE,
                 )
 
-            # Save image detections.
-            data["image_detection"] = image_detections
-
             # Save results.
             r.json().set(
-                f"video_information:{youtube_id}:{filename}", Path.root_path(), data
+                f"video_information:{youtube_id}:{filename}",
+                ".image_detection",
+                image_detections,
             )
 
             # Push to next phase of pipeline.
@@ -77,10 +83,7 @@ class ImageDetection:
 
             # If the pngs were not loaded in yet, load them in.
             if frame_pngs is None:
-                frame_pngs = sorted(
-                    directory.glob(f"{filename}_*.png"),
-                    key=lambda x: int(x.stem.rsplit("_", 1)[-1]),
-                )
+                frame_pngs = directory.glob(f"{filename}_*.png")
 
             # Delete the pngs for this section.
             for frame_png in frame_pngs:
@@ -88,7 +91,7 @@ class ImageDetection:
 
 
 def handler(signum, frame):
-    picologging.info(f"Interrupted by {signum}, shutting down")
+    logger.info(f"Interrupted by {signum}, shutting down")
     event.set()
 
 
@@ -101,4 +104,4 @@ if __name__ == "__main__":
     detection = ImageDetection(event)
     detection.run()
 
-    picologging.info("Started image detection.")
+    logger.info("Started image detection.")

@@ -3,13 +3,15 @@ import torch.nn as nn
 from core.config import settings
 
 
-def image_detection(model: nn.Module, frames: list, confidence: float = 0.7):
+def image_detection(model: nn.Module, frames: list, confidence: float = 0.7) -> dict:
+    """
+    Detects animals in a list of frames.
+    :param model: Model to use for detection.
+    :param frames: List of frames to detect animals in.
+    :param confidence: Confidence threshold for detection.
+    :return: Dictionary containing the number of detections for each animal.
     """
 
-    :param model:
-    :param frames:
-    :param confidence:
-    """
     # Save results of image detection.
     result = {}
 

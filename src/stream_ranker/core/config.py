@@ -2,17 +2,18 @@ import sys
 
 import picologging
 import redis
-from pydantic import DirectoryPath, field_validator, ValidationError, model_validator
+from pydantic import field_validator, ValidationError, model_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    THREAD_COUNT: int = 5
     PROGRAM_LOG_LEVEL: int = picologging.INFO
+    THREAD_COUNT: int = 5
 
-    USER_VOTE_WEIGHT: float = 1
-    ANIMAL_COUNT_WEIGHT: float = 1
-    ANIMAL_SURFACE_WEIGHT: float = 1
+    USER_VOTE_WEIGHT: float = 10
+    ANIMAL_COUNT_WEIGHT: float = 2
+    ANIMAL_SURFACE_WEIGHT: float = 10
+    AUDIO_CONFIDENCE_WEIGHT: float = 1
     DECREASE_SCORE_WEIGHT: float = 1
     PENALIZE_STREAM_AFTER_TURNS: int = 0
 
@@ -30,23 +31,6 @@ class Settings(BaseSettings):
             "warning": picologging.WARNING,
             "info": picologging.INFO,
             "debug": picologging.DEBUG,
-        }
-
-        return levels.get(v, v)
-
-    @field_validator("FFMPEG_LOG_LEVEL", mode="before")
-    @classmethod
-    def validate_ffmpeg_debug_level(cls, v) -> int:
-        levels = {
-            "quiet": -8,
-            "panic": 0,
-            "fatal": 8,
-            "error": 16,
-            "warning": 24,
-            "info": 32,
-            "verbose": 40,
-            "debug": 48,
-            "trace": 56,
         }
 
         return levels.get(v, v)

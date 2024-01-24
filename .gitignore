@@ -878,5 +878,3 @@ FodyWeavers.xsd
 src/audios/**
 src/streams/**
 !src/audios/.gitkeep
-!streams/.gitkeep
-src/image_detection/models/**

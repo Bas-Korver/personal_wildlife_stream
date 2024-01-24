@@ -1,20 +1,30 @@
 import os
 import pathlib
 import subprocess
-import argparse
-import threading
+
+import picologging
 
 from core.config import settings
 
+logger = picologging.getLogger("extract_video_data.audio_extractor")
+
 
 def extract_audio(video_path: str | os.PathLike):
+    """
+    Extracts audio from video.
+    :param video_path: Path to video.
+    """
+
     video_path = pathlib.Path(video_path)
 
     store_path = video_path.parents[0]
     filename = video_path.stem
+    logger.debug(f"Extracting audio from {video_path}")
     subprocess.run(
         [
             "ffmpeg",
+            "-loglevel",
+            str(settings.FFMPEG_LOG_LEVEL),
             "-nostdin",
             "-i",
             video_path,
@@ -22,24 +32,6 @@ def extract_audio(video_path: str | os.PathLike):
             "0",
             "-map",
             "a",
-            "-loglevel",
-            str(settings.FFMPEG_LOG_LEVEL),
-            "-xerror",
             f"{store_path}/{filename}.mp3",
         ],
-    )
-
-
-if __name__ == "__main__":
-    # parser = argparse.ArgumentParser(prog="audio_extractor")
-    #
-    # parser.add_argument("-i", "--input", required=True)
-    # parser.add_argument("-o", "--output", required=True)
-    #
-    # arguments = parser.parse_args()
-    #
-    # extract_audio(arguments.input, arguments.output)
-
-    extract_audio(
-        "../../streams/Ihr_nwydXi0/20240119_015408.mp4",
     )

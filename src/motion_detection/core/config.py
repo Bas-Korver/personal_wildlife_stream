@@ -7,8 +7,9 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    PROGRAM_LOG_LEVEL: int = picologging.INFO
     THREAD_COUNT: int = 5
-    PROGRAM_LOG_LEVEL: int = picologging.NOTSET
+
     PIXEL_THRESHOLD_FOR_MOVEMENT: int = 30
     MIN_PIXEL_CHANGE_COUNT_FOR_MOVEMENT: int = 1000
 

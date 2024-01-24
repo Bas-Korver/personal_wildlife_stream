@@ -8,6 +8,11 @@ from core.config import settings
 
 
 def detect_birds(audio_path: str | os.PathLike) -> list[dict]:
+    """
+    Detect birds in an audio file.
+    :param audio_path: Path to audio file.
+    :return: List dictionaries containing detections.
+    """
     analyzer = Analyzer()
 
     # TODO: longitude and latitude to birdnetlib.Recording for a more accurate result.

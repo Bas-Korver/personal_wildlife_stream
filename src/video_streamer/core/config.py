@@ -2,15 +2,25 @@ import sys
 
 import picologging
 import redis
-from pydantic import DirectoryPath, field_validator, ValidationError, model_validator
+from pydantic import (
+    DirectoryPath,
+    field_validator,
+    ValidationError,
+    model_validator,
+    SecretStr,
+)
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    PROGRAM_LOG_LEVEL: int = picologging.INFO
+    FFMPEG_LOG_LEVEL: int = 32
+
     VIDEO_BATCH_DELTA_TIME: int = 2
     PROCESSED_VIDEOS_FOR_BATCH: float = 0.8
     SAVE_PATH: DirectoryPath
-    PROGRAM_LOG_LEVEL: int = picologging.INFO
+
+    STREAM_KEY: SecretStr
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
@@ -26,6 +36,23 @@ class Settings(BaseSettings):
             "warning": picologging.WARNING,
             "info": picologging.INFO,
             "debug": picologging.DEBUG,
+        }
+
+        return levels.get(v, v)
+
+    @field_validator("FFMPEG_LOG_LEVEL", mode="before")
+    @classmethod
+    def validate_ffmpeg_debug_level(cls, v) -> int:
+        levels = {
+            "quiet": -8,
+            "panic": 0,
+            "fatal": 8,
+            "error": 16,
+            "warning": 24,
+            "info": 32,
+            "verbose": 40,
+            "debug": 48,
+            "trace": 56,
         }
 
         return levels.get(v, v)

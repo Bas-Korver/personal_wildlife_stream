@@ -2,14 +2,15 @@ import sys
 
 import picologging
 import redis
-from pydantic import DirectoryPath, field_validator, ValidationError, model_validator
+from pydantic import field_validator, ValidationError, model_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    THREAD_COUNT: int = 5
     PROGRAM_LOG_LEVEL: int = picologging.INFO
     FFMPEG_LOG_LEVEL: int = 32
+    THREAD_COUNT: int = 5
+
     FRAMES_PER_SECOND: int = 1
     FRAMES_TO_GET: int = 0
 

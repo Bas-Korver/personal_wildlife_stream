@@ -3,7 +3,6 @@ import sys
 import picologging
 import redis
 from pydantic import (
-    DirectoryPath,
     ValidationError,
     model_validator,
     field_validator,
@@ -13,11 +12,11 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    PROGRAM_LOG_LEVEL: int = picologging.INFO
+
     DEVICE: str = "cpu"
     MODEL_PATH: FilePath = None
     MODEL_CONFIDENCE: float = 0.7
-
-    PROGRAM_LOG_LEVEL: int = picologging.NOTSET
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379

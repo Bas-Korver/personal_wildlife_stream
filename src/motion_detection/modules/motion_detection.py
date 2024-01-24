@@ -1,24 +1,29 @@
 import cv2
 import numpy as np
+import picologging
+
+# Global variables
+logger = picologging.getLogger("detect_motion.motion_detection")
 
 
 def motion_detection(
-    frames,
-    threshold=30,
-    min_pixel_count=1000,
-):
+    frames: list,
+    threshold: int = 30,
+    min_pixel_count: int = 1000,
+) -> tuple[bool, np.ndarray]:
     """
     Run motion detection on a set of frames.
-    :param frames:
-    :param threshold:
-    :param min_pixel_count:
-    :return:
+    :param frames: list of frames
+    :param threshold: threshold for pixel difference
+    :param min_pixel_count: minimum amount of pixels that need to be different to classify as movement
+    :return: (bool, np.ndarray)
     """
 
     # Check each frame from movement compared to the previous frame.
     difference_frames = []
     movement = False
 
+    logger.debug(f"Running motion detection on {len(frames)} frames")
     for i in range(1, len(frames)):
         # Convert frames to grayscale and apply a gaussian blur.
         gray_frame = cv2.cvtColor(frames[i], cv2.COLOR_BGR2GRAY)

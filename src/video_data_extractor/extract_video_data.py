@@ -2,17 +2,24 @@ import pathlib
 import platform
 import signal
 import threading
+
 import picologging
 from redis.commands.json.path import Path
 
+from core.config import settings
 from db.redis_connection import RedisConnection
 from modules.audio_extractor import extract_audio
 from modules.frame_extractor import get_frames_from_video
-from core.config import settings
 
+# Global variables
 r = RedisConnection().get_redis_client()
-picologging.basicConfig(level=settings.PROGRAM_LOG_LEVEL)
+picologging.basicConfig(
+    level=settings.PROGRAM_LOG_LEVEL,
+    format="%(levelname)s - %(name)s - Line: %(lineno)d - Thread: %(thread)d - %(message)s",
+)
+logger = picologging.getLogger("extract_video_data")
 event = threading.Event()
+lock = threading.Lock()
 
 
 class DataExtractor(threading.Thread):
@@ -29,15 +36,14 @@ class DataExtractor(threading.Thread):
             try:
                 video_path = pathlib.Path(r.brpop("queue:video_data_extractor", 10)[1])
             except TypeError:
-                # TODO: this logging statement blocks the thread.
-                # picologging.debug(f"Queue is empty, retrying")
+                logger.debug(f"Queue is empty, retrying")
                 continue
 
             # Get directory and filename.
             filename = video_path.stem
             youtube_id = video_path.parent.name
 
-            picologging.debug(
+            logger.debug(
                 f"Video_data_extractor: Got video {youtube_id}_{filename} from queue"
             )
 
@@ -47,8 +53,10 @@ class DataExtractor(threading.Thread):
             )
 
             if not successful:
-                picologging.error(f"Failed to extract frames from {video_path}")
+                logger.error(f"Failed to extract frames from {video_path}")
+                # TODO: add frames cleanup
                 continue
+
             # Extract audio from video
             extract_audio(video_path)
 
@@ -67,23 +75,24 @@ class DataExtractor(threading.Thread):
                 data,
             )
 
-            r.lpush("queue:level_1_detection", str(video_path))
-
-            # TODO: make it configurable that audio detection will only be executed when motion is detected.
-            r.lpush("queue:audio_detection", str(video_path))
+            # Add video to the queue for level 1 detection
+            r.lpush("queue:level_1_detection_motion", str(video_path))
+            r.lpush("queue:level_1_detection_audio", str(video_path))
 
 
 def handler(signum, frame):
-    picologging.info(f"Interrupted by {signum}, shutting down")
-    event.set()
+    logger.info(f"Interrupted by {signum}, shutting down")
+    event.set()  # TODO: add intermediate.ts file cleanup
 
 
 if __name__ == "__main__":
+    # Register signal handlers
     if platform.system() == "Linux":
         signal.signal(signal.SIGHUP, handler)
     signal.signal(signal.SIGTERM, handler)
     signal.signal(signal.SIGINT, handler)
 
+    # Start threads
     threads = []
     for _ in range(settings.THREAD_COUNT):
         threads.append(DataExtractor(event))
@@ -91,7 +100,7 @@ if __name__ == "__main__":
     for thread in threads:
         thread.start()
 
-    picologging.info("Started all threads for video extraction.")
+    logger.info("Started all threads for video extraction.")
 
     for thread in threads:
         while thread.is_alive():
