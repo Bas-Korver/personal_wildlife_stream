@@ -27,6 +27,9 @@ class StreamsController(Controller):
             yt_id.split(":")[1] for yt_id in reversed(r.lrange("stream_order", 0, -1))
         ]
 
+        if not youtube_ids:
+            raise ClientException(detail="No streams available")
+
         if score_number is None:
             return f"https://www.youtube.com/watch?v={youtube_ids[0]}"
 
