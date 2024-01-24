@@ -1,8 +1,6 @@
-from typing import Any
-
+import redis
 from pydantic import ValidationError, model_validator
 from pydantic_settings import BaseSettings
-import redis
 from redis.exceptions import ConnectionError
 
 

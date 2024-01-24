@@ -6,13 +6,8 @@ from db.redis_connection import RedisConnection
 
 from core.guards import authenticate
 
+# Global variables.
 r = RedisConnection().get_redis_client()
-
-urls = [
-    "https://www.youtube.com/watch?v=HsLvnFQW_yM",
-    "https://www.youtube.com/watch?v=Ihr_nwydXi0",
-    "https://www.youtube.com/watch?v=yPSYdCWRWFA",
-]
 
 
 class StreamsController(Controller):
@@ -28,12 +23,16 @@ class StreamsController(Controller):
         Score of 0 meaning the best scored stream for a set op preferences.
         :return: stream URL.
         """
+        youtube_ids = [
+            yt_id.split(":")[1] for yt_id in reversed(r.lrange("stream_order", 0, -1))
+        ]
+
         if score_number is None:
-            return urls[0]
+            return f"https://www.youtube.com/watch?v={youtube_ids[0]}"
 
         try:
-            urls[score_number]
+            youtube_ids[score_number]
         except IndexError:
             raise ClientException(detail="Score number out of range")
 
-        return urls[score_number]
+        return f"https://www.youtube.com/watch?v={youtube_ids[0]}"

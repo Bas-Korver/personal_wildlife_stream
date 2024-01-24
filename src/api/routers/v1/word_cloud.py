@@ -1,4 +1,5 @@
 from litestar import Controller, get, post
+from redis.commands.json.path import Path
 
 from core.guards import authenticate
 from db.redis_connection import RedisConnection
@@ -13,10 +14,22 @@ class WordCloudController(Controller):
 
     @get()
     async def list_found_animals(self) -> list[AnimalsCloud]:
+        added_animals = []
         animals = []
-        for key in r.scan_iter("animals:*"):
-            dict_value = r.json().get(key)
-            animals.append(AnimalsCloud(animal=dict_value["organism"]))
+        current_batch = r.lrange("stream_order", 0, -1)
+
+        for video_key in current_batch:
+            data = r.json().get(video_key)
+
+            for animal in data["image_detection"]:
+                if animal not in added_animals:
+                    added_animals.append(animal)
+                    animals.append(AnimalsCloud(animal=animal))
+
+            for animal in data["audio_detection"]:
+                if animal not in added_animals:
+                    added_animals.append(animal)
+                    animals.append(AnimalsCloud(animal=animal))
 
         return animals
 
@@ -24,10 +37,11 @@ class WordCloudController(Controller):
     async def list_animal_votes(self) -> list[AnimalVoteCount]:
         votes_dict = {}
         for key in r.scan_iter("votes:*"):
-            dict_value = r.json().get(key)
-            if dict_value["votedOrganism"] not in votes_dict:
-                votes_dict[dict_value["votedOrganism"]] = 0
-            votes_dict[dict_value["votedOrganism"]] += 1
+            data = r.json().get(key)
+            for animal in data["voted_animals"]:
+                if animal not in votes_dict:
+                    votes_dict[animal] = 0
+                votes_dict[animal] += 1
 
         votes_return_list = []
         for key, value in votes_dict.items():
@@ -36,4 +50,16 @@ class WordCloudController(Controller):
 
     @post(path="/votes", guards=[authenticate], security=[{"apiKey": []}])
     async def set_user_vote(self, data: UserVote) -> UserVote:
+        # HACK: For now send random user ID to API
+        r.json().set(
+            f"votes:{data.user_id}",
+            Path.root_path(),
+            {
+                "voted_animals": data.voted_animals,
+            },
+        )
+        r.expire(
+            f"votes:{data.user_id}",
+            1800,
+        )
         return data

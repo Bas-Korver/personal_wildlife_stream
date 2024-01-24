@@ -8,7 +8,7 @@ class AnimalVoteCount(BaseModel):
 
 class UserVote(BaseModel):
     user_id: str
-    voted_animal: str
+    voted_animals: list
 
 
 class AnimalsCloud(BaseModel):
