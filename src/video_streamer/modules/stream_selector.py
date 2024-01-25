@@ -3,6 +3,8 @@ import pathlib
 from datetime import datetime, timedelta
 
 import logging
+
+import structlog
 from redis.commands.json.path import Path
 
 from core.config import settings
@@ -10,6 +12,7 @@ from db.redis_connection import RedisConnection
 
 # Global variables.
 r = RedisConnection().get_redis_client()
+logger = structlog.get_logger()
 p_stream_selector = r.pubsub(ignore_subscribe_messages=True)
 p_stream_selector.subscribe("stream_selector")
 
@@ -26,14 +29,14 @@ def select_streams(event):
     # Continuously loop to check if new batch of data is available.
     while True:
         if event.is_set():
-            picologging.debug("Received event to stop stream selection.")
+            logger.debug("Received event to stop stream selection.")
             return
 
         # Check if new batch is available, if so select the new streams.
         new_batch, available_videos = check_new_batch_available(current_batch)
         if new_batch is not None:
             # Overwrite old batch with new selection.
-            picologging.debug("Detected new available batch, replacing old batch.")
+            logger.debug("Detected new available batch, replacing old batch.")
 
             # Retrieve all scores for the videos.
             scores = {video: r.json().get(video)["score"] for video in available_videos}
@@ -59,7 +62,7 @@ def select_streams(event):
             if current_batch is None:
                 # Notify the streamer.
                 r.publish("streamer", "start_streaming")
-                picologging.debug(
+                logger.debug(
                     f"First batch has been processed, notified streamer to start stream."
                 )
 
@@ -75,7 +78,7 @@ def select_streams(event):
         stream_chosen = check_if_stream_chosen()
         if stream_chosen is not None:
             stream = stream_chosen.split(":")[1]
-            picologging.debug(f"Stream {stream} got picked, currently showing.")
+            logger.debug(f"Stream {stream} got picked, currently showing.")
 
             data = r.json().get("stream_information")
             for key in data:

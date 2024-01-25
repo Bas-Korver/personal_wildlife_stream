@@ -26,16 +26,18 @@ librosa = "^0.10.1"
 resampy = "^0.4.2"
 birdnetlib = "^0.14.0"
 yt-dlp = "^2023.12.30"
-torch = { version = "2.1.2", source="torch"}
-torchaudio = { version = "2.1.2", source="torch"}
-torchvision = { version = "0.16.2", source="torch"}
+#torch = { version = "2.1.2", source="torch"}
+#torchaudio = { version = "2.1.2", source="torch"}
+#torchvision = { version = "0.16.2", source="torch"}
+#
+#[[tool.poetry.source]]
+#name = "torch"
+#url = "https://download.pytorch.org/whl/cu121"
+#priority = "supplemental"
 
 
-
-[[tool.poetry.source]]
-name = "torch"
-url = "https://download.pytorch.org/whl/cu121"
-priority = "supplemental"
+[tool.poetry.group.dev.dependencies]
+black = "^23.12.1"
 
 [build-system]
 requires = ["poetry-core"]
