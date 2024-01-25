@@ -38,8 +38,8 @@ class DownloadThread(threading.Thread):
                 logger.debug(f"Extracting video information from {self.stream}.")
                 video_information = YDL.extract_info(self.stream, download=False)
             except DownloadError:
-                logger.error(
-                    f"Error while extracting video information retrying in 60 seconds."
+                logger.warning(
+                    f"Problem while extracting video information retrying in 60 seconds."
                 )
                 self.event.wait(60)
 
@@ -95,5 +95,7 @@ class DownloadThread(threading.Thread):
 
             # If exit code is not 0 and the event is not set, wait 60 seconds and retry
             if exit_code != 0 and not self.event.is_set():
-                logger.error(f"Error while downloading stream retrying in 60 seconds.")
+                logger.warning(
+                    f"Problem while downloading stream retrying in 60 seconds."
+                )
                 self.event.wait(60)
