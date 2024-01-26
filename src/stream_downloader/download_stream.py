@@ -57,7 +57,7 @@ YOUTUBE_URLS = [
     "https://youtu.be/wF_ytZyrW3w",
     "https://youtu.be/ZFuWYnuu9I8",
     "https://youtu.be/ItdXaWUVF48",
-    "https://youtu.be/5e4lsEe4Vew ",
+    "https://youtu.be/5e4lsEe4Vew",
     "https://youtu.be/pZZst4BOpVI",
     "https://youtu.be/1zcIUk66HX4",
     "https://youtu.be/Sq-X4Ga1oyc",

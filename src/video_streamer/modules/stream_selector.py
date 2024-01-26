@@ -2,8 +2,6 @@ import glob
 import pathlib
 from datetime import datetime, timedelta
 
-import logging
-
 import structlog
 from redis.commands.json.path import Path
 
@@ -47,7 +45,7 @@ def select_streams(event):
                 for video in sorted(scores.items(), key=lambda x: x[1], reverse=True)
             ]
 
-            print(f"{videos_ranked=}")
+            logger.debug(f"{videos_ranked=}")
 
             # Save the ranking order of the videos in Redis for the stream.
             for video in videos_ranked:
@@ -153,11 +151,13 @@ def check_new_batch_available(current_batch):
 
 
 def delete_files(keys):
+    logger.debug(f"Deleting files for keys {keys}.")
     for key in keys:
         path = r.json().get(key, ".video_path")
         r.delete(key)
         if path is None:
             continue
+        logger.debug(f"Deleting file {path}.")
         pathlib.Path(path).unlink()
 
 

@@ -19,7 +19,9 @@ event = threading.Event()
 
 # Load model
 DEVICE = torch.device(settings.DEVICE)
-MODEL = torch.hub.load("ultralytics/yolov5", "custom", str(settings.MODEL_PATH))
+MODEL = torch.hub.load(
+    "ultralytics/yolov5", "custom", str(settings.MODEL_PATH), force_reload=True
+)
 MODEL.to(DEVICE)
 
 

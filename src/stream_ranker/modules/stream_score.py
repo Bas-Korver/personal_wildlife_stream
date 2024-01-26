@@ -31,9 +31,22 @@ def stream_score(stream: str, image_detection: dict, audio_detection: dict) -> f
 
         score += settings.AUDIO_CONFIDENCE_WEIGHT * confidence
 
+    votes_dict = {}
+    total_votes = 0
+    for key in r.scan_iter("votes:*"):
+        data = r.json().get(key)
+        for animal in data["voted_animals"]:
+            if animal not in votes_dict:
+                votes_dict[animal] = 0
+            votes_dict[animal] += 1
+            total_votes += 1
+
     # Go through image detection results.
     for animal in image_detection.keys():
-        priority = 1  # TODO: Add priority based on user votes, percentage of votes.
+        if animal in votes_dict:
+            priority = votes_dict[animal] / total_votes
+        else:
+            priority = 0
         count = image_detection[animal]["count"]
         surface = image_detection[animal]["surface"]
 
