@@ -29,4 +29,4 @@ def create_app() -> Litestar:
 app = create_app()
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", reload=True, reload_dirs="./", host="10.0.8.103")
+    uvicorn.run("main:app", reload=True, reload_dirs="./")
