@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     REDIS_USERNAME: str | None = None
     REDIS_PASSWORD: str | None = None
     CORS_ALLOWED_ORIGINS: list[str] = []
+    WEATHER_API_KEY: str
 
     @model_validator(mode="after")
     def check_working_reddis_connection(self):
