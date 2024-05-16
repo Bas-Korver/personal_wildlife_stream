@@ -40,4 +40,4 @@ class Stream(DeclaritiveBase):
     country: Mapped["Country"] = relationship(back_populates="countries")
 
     def __repr__(self) -> str:
-        return f"Stream(id={self.id!r}, name={self.name!r}, url={self.url!r}, tag={self.tag.name!r}, country={self.country.name!r}, location={self.location!r}, latitude={self.latitude!r}, longitude={self.longitude!r})"
+        return f"Stream(id={self.id!r}, name={self.name!r}, url={self.url!r}, tag={self.tag_id!r}, country_id={self.country_id!r}, location={self.location!r}, latitude={self.latitude!r}, longitude={self.longitude!r})"
