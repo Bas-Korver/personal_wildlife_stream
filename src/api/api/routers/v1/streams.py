@@ -35,7 +35,7 @@ class StreamsController(Controller):
         except IndexError:
             raise ClientException(detail="Score number out of range")
 
-        return f"https://www.youtube.com/watch?v={youtube_ids[score_number]}"
+        return f"https://www.youtube.com/watch?v={youtube_ids[0]}"
 
     @get("/weather")
     async def get_weather(self) -> dict:
