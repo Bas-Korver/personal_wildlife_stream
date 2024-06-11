@@ -1,4 +1,5 @@
 [tool.poetry]
+package-mode = false
 name = "video-data-extractor"
 version = "0.1.0"
 description = "Extracts frames and audio from the downloaded fragments."

@@ -878,3 +878,9 @@ FodyWeavers.xsd
 
 src/streams/**
 !src/streams/.gitkeep
+
+# Ignore large files
+*.ts
+*.zip
+*.pt
+*.pth

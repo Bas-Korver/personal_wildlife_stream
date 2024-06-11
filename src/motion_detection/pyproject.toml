@@ -1,4 +1,5 @@
 [tool.poetry]
+package-mode = false
 name = "motion-detection"
 version = "0.1.0"
 description = "Detects if there is motion in the extracted frames by applying frame differencing."

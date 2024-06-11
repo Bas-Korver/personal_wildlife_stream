@@ -1,4 +1,5 @@
 [tool.poetry]
+package-mode = false
 name = "image-detection"
 version = "0.1.0"
 description = "Detects animals in the extracted frames with YOLOv5."
@@ -23,8 +24,6 @@ pandas = "^2.2.0"
 torch = { version = "2.1.2", source="torch"}
 torchaudio = { version = "2.1.2", source="torch"}
 torchvision = { version = "0.16.2", source="torch"}
-
-
 
 [[tool.poetry.source]]
 name = "torch"

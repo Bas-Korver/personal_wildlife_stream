@@ -1,0 +1,15 @@
+[tool.poetry]
+package-mode = false
+name = "video-streamer"
+version = "0.1.0"
+description = ""
+authors = ["Bas Körver <bas_korver@outlook.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

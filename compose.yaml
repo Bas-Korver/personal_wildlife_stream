@@ -1,0 +1,13 @@
+version: '3.8'
+name: 'personal-wildlife-stream-backend'
+
+services:
+  # api:
+  # stream_downloader:
+  # Video_data_extractor:
+  # motion_detection:
+  # audio_detection:
+  # image_detection:  
+  # speech_subtitle_generation:  
+  # stream_ranker:  
+  # video_streamer:
