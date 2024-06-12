@@ -11,8 +11,7 @@ from sqlalchemy.orm import (
 class Country(DeclaritiveBase):
     __tablename__ = "countries"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    iso: Mapped[str] = mapped_column(String(3))
+    iso: Mapped[str] = mapped_column(String(3), primary_key=True)
     name: Mapped[str] = mapped_column(String)
 
     streams: Mapped[List["Stream"]] = relationship(
@@ -20,4 +19,4 @@ class Country(DeclaritiveBase):
     )
 
     def __repr__(self) -> str:
-        return f"Country(id={self.id!r}, iso={self.iso!r}, name={self.name!r})"
+        return f"Country(iso={self.iso!r}, name={self.name!r})"

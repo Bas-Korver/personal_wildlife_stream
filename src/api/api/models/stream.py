@@ -15,6 +15,7 @@ class StreamTag(DeclaritiveBase):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String)
+    model: Mapped[str] = mapped_column(String, nullable=True)
 
     streams: Mapped[List["Stream"]] = relationship(
         back_populates="tag", cascade="all, delete-orphan"
