@@ -1,11 +1,40 @@
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
 import uvicorn
 from litestar import Litestar
 from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.spec import Components, SecurityScheme
+from sqlalchemy import URL
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from core.config import settings
 from routers import create_router
+
+
+@asynccontextmanager
+async def db_connection(app: Litestar) -> AsyncGenerator[None, None]:
+    engine = getattr(app.state, "engine", None)
+    if engine is None:
+        url_object = URL.create(
+            "postgresql+asyncpg",
+            username=settings.POSTGRES_USERNAME,
+            password=settings.POSTGRES_PASSWORD,
+            host=settings.POSTGRES_HOST,
+            port=settings.POSTGRES_PORT,
+            database=settings.POSTGRES_DATABASE,
+        )
+        engine = create_async_engine(url_object)
+        app.state.engine = engine
+
+    try:
+        yield
+    finally:
+        await engine.dispose()
+
+
+# TODO: add something similar for Redis
 
 
 def create_app() -> Litestar:
@@ -23,6 +52,9 @@ def create_app() -> Litestar:
                 }
             ),
         ),
+        lifespan=[
+            db_connection,
+        ],
     )
 
 

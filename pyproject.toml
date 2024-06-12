@@ -27,10 +27,13 @@ librosa = "^0.10.1"
 resampy = "^0.4.2"
 birdnetlib = "^0.14.0"
 yt-dlp = "^2023.12.30"
-torch = { version = "2.1.2", source="torch"}
-torchaudio = { version = "2.1.2", source="torch"}
-torchvision = { version = "0.16.2", source="torch"}
+torch = { version = "2.3.1", source="torch"}
+torchaudio = { version = "2.3.1", source="torch"}
+torchvision = { version = "0.18.1", source="torch"}
 jupyter = "^1.0.0"
+sqlalchemy = "^2.0.30"
+psycopg2 = "^2.9.9"
+asyncpg = "^0.29.0"
 
 [[tool.poetry.source]]
 name = "torch"

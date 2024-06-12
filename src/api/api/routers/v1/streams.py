@@ -1,8 +1,11 @@
-from litestar import Controller, get
+import sys
+
+from litestar import Controller, get, Litestar, Request
 from litestar.exceptions import *
 
 from db.redis_connection import RedisConnection
 from modules.weather_information import get_weather_information
+from litestar.datastructures import State
 
 # Global variables.
 r = RedisConnection().get_redis_client()
@@ -11,6 +14,10 @@ r = RedisConnection().get_redis_client()
 class StreamsController(Controller):
     path = "/streams"
     tags = ["streams"]
+
+    @get("/test")
+    async def test(self, state: State) -> None:
+        print(f"{state.engine=}")
 
     @get()
     async def get_stream_url(self, score_number: int | None = None) -> str:
@@ -21,6 +28,7 @@ class StreamsController(Controller):
         Score of 0 meaning the best scored stream for a set op preferences.
         :return: stream URL.
         """
+
         youtube_ids = [
             yt_id.split(":")[1] for yt_id in reversed(r.lrange("stream_order", 0, -1))
         ]

@@ -1,6 +1,6 @@
 from litestar import Router
 
-from src.api.api.routers.v1 import streams, word_cloud
+from routers.v1 import streams, word_cloud
 
 
 def create_router() -> Router:
