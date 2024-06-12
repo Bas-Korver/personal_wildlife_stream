@@ -25,9 +25,9 @@ def image_detection(model: nn.Module, frames: list, confidence: float = 0.7) -> 
             # Get detected animal's name and normalized surface size.
             animal_name = findings["name"][i]
             animal_surface = (
-                (findings["xmax"][i] - findings["xmin"][i])
-                * (findings["ymax"][i] - findings["ymin"][i])
-                / (frame.shape[0] * frame.shape[1])
+                    (findings["xmax"][i] - findings["xmin"][i])
+                    * (findings["ymax"][i] - findings["ymin"][i])
+                    / (frame.shape[0] * frame.shape[1])
             )
 
             # If animal not seen yet, add it to results.

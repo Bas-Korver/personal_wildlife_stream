@@ -32,6 +32,6 @@ class Settings(BaseSettings):
 
 
 try:
-    settings = Settings(_env_file=".env")
+    settings = Settings(_env_file="../.env")
 except ValidationError as e:
     print(e)

@@ -30,6 +30,7 @@ yt-dlp = "^2023.12.30"
 torch = { version = "2.1.2", source="torch"}
 torchaudio = { version = "2.1.2", source="torch"}
 torchvision = { version = "0.16.2", source="torch"}
+jupyter = "^1.0.0"
 
 [[tool.poetry.source]]
 name = "torch"

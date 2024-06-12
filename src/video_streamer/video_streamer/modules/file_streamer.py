@@ -1,8 +1,7 @@
 import pathlib
+import structlog
 import subprocess
 import time
-
-import structlog
 
 from core.config import settings
 from db.redis_connection import RedisConnection

@@ -1,6 +1,5 @@
-import subprocess
-
 import structlog
+import subprocess
 
 from db.redis_connection import RedisConnection
 

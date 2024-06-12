@@ -1,10 +1,9 @@
 import platform
 import shutil
 import signal
+import structlog
 import threading
 from threading import Event
-
-import structlog
 from watchdog.observers import Observer
 
 from core.config import settings
@@ -12,7 +11,6 @@ from db.redis_connection import RedisConnection
 from modules.downloader import DownloadThread
 from modules.file_watcher import FileCreatedHandler
 from modules.queue_handler import QueueHandler
-
 
 # Global variables
 r = RedisConnection().get_redis_client()

@@ -13,7 +13,7 @@ authors = [
 ]
 license = "GPL-3.0-only"
 readme = "README.md"
-packages = [{include = "stream_downloader"}]
+packages = [{ include = "stream_downloader" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"

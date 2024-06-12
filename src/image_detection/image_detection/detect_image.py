@@ -1,11 +1,10 @@
+import cv2
 import pathlib
 import platform
 import signal
+import structlog
 import threading
 import time
-
-import cv2
-import structlog
 import torch
 
 from core.config import settings

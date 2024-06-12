@@ -1,8 +1,7 @@
-import sys
-
 import logging
 import redis
 import structlog
+import sys
 from pydantic import ValidationError, model_validator, field_validator
 from pydantic_settings import BaseSettings
 

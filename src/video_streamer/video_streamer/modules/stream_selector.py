@@ -1,8 +1,7 @@
 import glob
 import pathlib
-from datetime import datetime, timedelta
-
 import structlog
+from datetime import datetime, timedelta
 from redis.commands.json.path import Path
 
 from core.config import settings
@@ -116,8 +115,8 @@ def check_new_batch_available(current_batch):
 
         # Check if there is no current group or the timestamp falls outside the batch window, to create a new grouping.
         if (
-            current_group is None
-            or (timestamp - datetime.strptime(current_group, "%Y%m%d_%H%M%S")) > DELTA
+                current_group is None
+                or (timestamp - datetime.strptime(current_group, "%Y%m%d_%H%M%S")) > DELTA
         ):
             # Create new grouping.
             current_group = key.split(":")[-1]
@@ -132,8 +131,8 @@ def check_new_batch_available(current_batch):
         batch
         for batch in groups.keys()
         if (len(groups[batch]) / n_streams)
-        >= settings.PROCESSED_VIDEOS_FOR_BATCH  # Batch should have at least the set amount of videos processed.
-        and batch != current_batch  # Batch should not be the current batch.
+           >= settings.PROCESSED_VIDEOS_FOR_BATCH  # Batch should have at least the set amount of videos processed.
+           and batch != current_batch  # Batch should not be the current batch.
     ]
 
     # If there is no batch available, return this.

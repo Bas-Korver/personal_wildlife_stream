@@ -52,9 +52,9 @@ def stream_score(stream: str, image_detection: dict, audio_detection: dict) -> f
 
         # Calculate stream score for this animal.
         score += (
-            (settings.USER_VOTE_WEIGHT * priority)
-            + (settings.ANIMAL_COUNT_WEIGHT * count)
-            + (settings.ANIMAL_SURFACE_WEIGHT * surface)
+                (settings.USER_VOTE_WEIGHT * priority)
+                + (settings.ANIMAL_COUNT_WEIGHT * count)
+                + (settings.ANIMAL_SURFACE_WEIGHT * surface)
         )
 
     return score

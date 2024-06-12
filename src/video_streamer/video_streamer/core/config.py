@@ -1,8 +1,7 @@
-import sys
-
 import logging
 import redis
 import structlog
+import sys
 from pydantic import (
     DirectoryPath,
     field_validator,

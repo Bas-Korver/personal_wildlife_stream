@@ -1,11 +1,10 @@
+import cv2
 import pathlib
 import platform
 import signal
+import structlog
 import threading
 import time
-
-import cv2
-import structlog
 
 from core.config import settings
 from db.redis_connection import RedisConnection

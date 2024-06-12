@@ -1,6 +1,7 @@
-from db.redis_connection import RedisConnection
 from litestar import Controller, get
 from litestar.exceptions import *
+
+from db.redis_connection import RedisConnection
 from modules.weather_information import get_weather_information
 
 # Global variables.

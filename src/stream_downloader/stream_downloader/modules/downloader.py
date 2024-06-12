@@ -1,8 +1,7 @@
 import os
+import structlog
 import subprocess
 import threading
-
-import structlog
 import yt_dlp
 from redis.commands.json.path import Path
 from yt_dlp.utils import DownloadError

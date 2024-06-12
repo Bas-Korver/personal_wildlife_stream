@@ -2,7 +2,7 @@ from litestar.connection import ASGIConnection
 from litestar.exceptions import *
 from litestar.handlers import BaseRouteHandler
 
-from api.core.config import settings
+from core.config import settings
 
 
 async def authenticate(connection: ASGIConnection, _: BaseRouteHandler) -> None:

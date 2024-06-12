@@ -1,6 +1,5 @@
 import pathlib
 import threading
-
 from redis.commands.json.path import Path
 
 from core.config import settings

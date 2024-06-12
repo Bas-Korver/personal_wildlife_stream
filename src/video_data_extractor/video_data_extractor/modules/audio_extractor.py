@@ -1,8 +1,7 @@
 import os
 import pathlib
-import subprocess
-
 import structlog
+import subprocess
 
 from core.config import settings
 

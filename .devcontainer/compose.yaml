@@ -1,0 +1,44 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: ./.devcontainer/Dockerfile
+
+  postgres:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: postgres-data
+        target: /var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      #      - name: database
+      - target: 5432
+        published: 5432
+        mode: host
+
+  redis:
+    image: redis/redis-stack:7.4.0-rc1
+    restart: always
+    volumes:
+      - type: volume
+        source: redis-data
+        target: /data
+    ports:
+      #      - name: database
+      - target: 6379
+        published: 6379
+        mode: host
+      #      - name: GUI
+      - target: 8001
+        published: 8001
+        mode: host
+
+
+volumes:
+  postgres-data:
+  redis-data:

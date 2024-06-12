@@ -1,13 +1,14 @@
 {
   "name": "poetry3-poetry-pyenv",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
+  "dockerComposeFile": "compose.yaml",
+  "service": "app",
+  //  "build": {
+  //    "dockerfile": "Dockerfile"
+  //  },
   // 👇 Features to add to the Dev Container. More info: https://containers.dev/implementors/features.
-   "features": {
-	   "ghcr.io/devcontainers-contrib/features/ffmpeg-apt-get:1": {}
-   },
-
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/ffmpeg-apt-get:1": {}
+  },
   // 👇 Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [
     8000

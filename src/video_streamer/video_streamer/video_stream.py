@@ -1,8 +1,7 @@
 import platform
 import signal
-import threading
-
 import structlog
+import threading
 
 from core.config import settings
 from db.redis_connection import RedisConnection

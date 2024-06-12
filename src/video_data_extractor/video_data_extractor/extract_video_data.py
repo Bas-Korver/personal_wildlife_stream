@@ -1,10 +1,9 @@
 import pathlib
 import platform
 import signal
+import structlog
 import threading
 import time
-
-import structlog
 
 from core.config import settings
 from db.redis_connection import (
