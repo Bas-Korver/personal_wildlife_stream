@@ -14,4 +14,4 @@ def insert_rows(target: Table, connection, **kw):
     connection.execute(
         target.insert(),
         tags,
-    ) 
+    )
