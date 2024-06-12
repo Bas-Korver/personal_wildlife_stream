@@ -7,9 +7,9 @@ logger = structlog.get_logger()
 
 
 def motion_detection(
-        frames: list,
-        threshold: int = 30,
-        min_pixel_count: int = 1000,
+    frames: list,
+    threshold: int = 30,
+    min_pixel_count: int = 1000,
 ) -> tuple[bool, np.ndarray]:
     """
     Run motion detection on a set of frames.

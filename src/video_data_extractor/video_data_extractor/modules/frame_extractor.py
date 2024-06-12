@@ -8,10 +8,10 @@ logger = structlog.get_logger()
 
 
 def get_frames_from_video(
-        event: threading.Event,
-        video_path: str | os.PathLike,
-        fps: int = 1,
-        frames_to_get: int = 0,
+    event: threading.Event,
+    video_path: str | os.PathLike,
+    fps: int = 1,
+    frames_to_get: int = 0,
 ):
     """
     Get frames from video with specified fps.
