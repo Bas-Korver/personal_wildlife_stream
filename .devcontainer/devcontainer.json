@@ -2,24 +2,31 @@
   "name": "poetry3-poetry-pyenv",
   "dockerComposeFile": "compose.yaml",
   "service": "app",
-  //  "build": {
-  //    "dockerfile": "Dockerfile"
-  //  },
+  "workspaceFolder": "/workspaces/personal_wildlife_stream",
+
   // 👇 Features to add to the Dev Container. More info: https://containers.dev/implementors/features.
   "features": {
     "ghcr.io/devcontainers-contrib/features/ffmpeg-apt-get:1": {}
   },
+
   // 👇 Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [
     8000
   ],
+
   // 👇 Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "poetry install",
-  // 👇 Configure tool-specific properties.§
 
+  // 👇 Configure tool-specific properties.
   "customizations": {
     "jetbrains": {
       "backend": "PyCharm"
+    },
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "njpwerner.autodocstring"
+      ]
     }
   }
 

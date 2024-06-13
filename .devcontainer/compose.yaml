@@ -2,7 +2,10 @@ services:
   app:
     build:
       context: ..
-      dockerfile: ./.devcontainer/Dockerfile
+      dockerfile: .devcontainer/Dockerfile     
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    volumes:
+      - ../:/workspaces/personal_wildlife_stream
 
   postgres:
     image: postgres:16-bookworm
