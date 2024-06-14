@@ -4,8 +4,10 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile     
     command: /bin/sh -c "while sleep 1000; do :; done"
-#    volumes:
-#      - ../:/workspaces/personal_wildlife_stream
+    volumes:
+      - type: bind
+        source: ..
+        target: /workspace
 
   postgres:
     image: postgres:16-bookworm
