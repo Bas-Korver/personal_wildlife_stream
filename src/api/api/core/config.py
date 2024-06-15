@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+from pathlib import Path
 
 import redis
 import structlog
@@ -55,17 +56,17 @@ class Settings(BaseSettings):
             port=self.POSTGRES_PORT,
             database=self.POSTGRES_DATABASE,
         )
-        # engine = create_engine(url_object)
-        #
-        # try:
-        #     engine.connect()
-        # except OperationalError as e:
-        #     logger.exception(
-        #         "Either the defined Postgres server is offline or one of the values is incorrect."
-        #     )
-        #     sys.exit(1)
-        # else:
-        #     engine.dispose()
+        engine = create_engine(url_object)
+
+        try:
+            engine.connect()
+        except OperationalError as e:
+            logger.exception(
+                "Either the defined Postgres server is offline or one of the values is incorrect."
+            )
+            sys.exit(1)
+        else:
+            engine.dispose()
 
 
 try:
