@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 
 import redis
@@ -68,7 +69,7 @@ class Settings(BaseSettings):
 
 
 try:
-    settings = Settings(_env_file="../.env")
+    settings = Settings(_env_file=str(Path(__file__).resolve().parent / "../../.env"))
 except ValidationError:
     logger.exception("tsjonge tsjonge, wat een zooitje!")
     sys.exit(1)
