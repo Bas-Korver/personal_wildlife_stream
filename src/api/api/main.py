@@ -6,8 +6,9 @@ from litestar import Litestar
 from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.spec import Components, SecurityScheme
-from sqlalchemy import URL
+from sqlalchemy import URL, create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
+from db.postgres import create_tables
 
 from core.config import settings
 from routers import create_router
@@ -27,6 +28,7 @@ async def db_connection(app: Litestar) -> AsyncGenerator[None, None]:
         )
         engine = create_async_engine(url_object)
         app.state.engine = engine
+        await create_tables(engine)
 
     try:
         yield

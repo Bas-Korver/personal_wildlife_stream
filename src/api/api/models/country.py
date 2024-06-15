@@ -1,14 +1,15 @@
+from typing import List
+from sqlalchemy import String
 from sqlalchemy.orm import (
-    DeclaritiveBase,
-    List,
     Mapped,
-    String,
     mapped_column,
     relationship,
 )
+from db.postgres import Base
+from models.stream import Stream
 
 
-class Country(DeclaritiveBase):
+class Country(Base):
     __tablename__ = "countries"
 
     iso: Mapped[str] = mapped_column(String(3), primary_key=True)
