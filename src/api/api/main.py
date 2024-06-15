@@ -19,7 +19,7 @@ async def db_connection(app: Litestar) -> AsyncGenerator[None, None]:
     engine = getattr(app.state, "engine", None)
     if engine is None:
         url_object = URL.create(
-            "postgresql",
+            "postgresql+asyncpg",
             username=settings.POSTGRES_USERNAME,
             password=settings.POSTGRES_PASSWORD,
             host=settings.POSTGRES_HOST,
@@ -28,7 +28,7 @@ async def db_connection(app: Litestar) -> AsyncGenerator[None, None]:
         )
         engine = create_async_engine(url_object)
         app.state.engine = engine
-        create_tables(engine)
+        await create_tables(engine)
 
     try:
         yield
