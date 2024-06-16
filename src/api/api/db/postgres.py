@@ -7,8 +7,10 @@ class Base(DeclarativeBase):
 
 async def create_tables(engine):
     # Import models.
-    from models.country import Country
-    from models.stream import StreamTag, Stream
+    import models.country
+    import models.stream
+    import models.animal
+    import models.streams_animals
 
     # Import seeders.
     import db.seeders.country_seeder
