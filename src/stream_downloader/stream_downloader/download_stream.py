@@ -1,35 +1,34 @@
 import platform
 import shutil
 import signal
-import structlog
 import threading
 from threading import Event
+
 from watchdog.observers import Observer
 
-from core.config import settings
-from db.redis_connection import RedisConnection
-from modules.downloader import DownloadThread
-from modules.file_watcher import FileCreatedHandler
-from modules.queue_handler import QueueHandler
+from core import settings
+from db import RedisConnection
+from modules import DownloadThread
+from modules import FileCreatedHandler
+from modules import QueueHandler
+from modules import make_logger
 
-# Global variables
 r = RedisConnection().get_redis_client()
-# structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
-logger = structlog.get_logger()
 event = Event()
+logger = make_logger()
 
 # TODO: Make this an API call.
 YOUTUBE_URLS = [
-    "https://youtu.be/DsNtwGJXTTs",
+    # "https://youtu.be/DsNtwGJXTTs",
     # "https://youtu.be/Ihr_nwydXi0",
-    "https://youtu.be/og8bbxl0iW8",
-    "https://youtu.be/4ElanH9Gzjw",
-    # "https://youtu.be/9pmsuKWKf90",
-    "https://youtu.be/LTz8tav2SCw",
-    "https://youtu.be/IVmL3diwJuw",
+    # "https://youtu.be/og8bbxl0iW8",
+    # "https://youtu.be/4ElanH9Gzjw",
+    "https://youtu.be/9pmsuKWKf90",
+    # "https://youtu.be/LTz8tav2SCw",
+    # "https://youtu.be/IVmL3diwJuw",
     # "https://youtu.be/StGk_2DA5ig",
     # "https://youtu.be/VUJbDTIYlM4",
-    "https://youtu.be/3MlJEXOZTfo",
+    # "https://youtu.be/3MlJEXOZTfo",
     # "https://youtu.be/_NXaovxB-Bk",
     # "https://youtu.be/yfSyjwY6zSQ",
     # "https://youtu.be/KyQAB-TKOVA",

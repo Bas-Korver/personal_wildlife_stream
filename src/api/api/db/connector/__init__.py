@@ -1,2 +1,2 @@
-from .postgres_connection import *
-from .redis_connection import *
+from .postgres_connection import postgres_connection
+from .redis_connection import redis_connection

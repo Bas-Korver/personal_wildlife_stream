@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from redis.commands.json.path import Path
 
 from core.config import settings
-from db.redis_connection import RedisConnection
+from db.connector.redis_connection import RedisConnection
 
 # Global variables.
 r = RedisConnection().get_redis_client()

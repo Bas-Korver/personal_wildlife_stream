@@ -1,6 +1,6 @@
 import redis
 
-from core.config import settings
+from core import settings
 
 
 class RedisConnection:

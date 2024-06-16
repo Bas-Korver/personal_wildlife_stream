@@ -4,7 +4,7 @@ import subprocess
 import time
 
 from core.config import settings
-from db.redis_connection import RedisConnection
+from db.connector.redis_connection import RedisConnection
 
 # Global variables.
 VIDEO_ITERATION_DELAY = 8.5  # TODO: Test with delay make configurable.

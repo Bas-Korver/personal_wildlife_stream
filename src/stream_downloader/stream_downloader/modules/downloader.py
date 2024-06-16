@@ -6,12 +6,13 @@ import yt_dlp
 from redis.commands.json.path import Path
 from yt_dlp.utils import DownloadError
 
-from core.config import settings
-from db.redis_connection import RedisConnection
+from core import settings
+from db import RedisConnection
+from modules import make_logger
 
 # Global variables
 r = RedisConnection().get_redis_client()
-logger = structlog.get_logger()
+logger = make_logger()
 YDL = yt_dlp.YoutubeDL(
     {
         "format": "best[ext=mp4]",
@@ -27,30 +28,30 @@ class DownloadThread(threading.Thread):
         self.event = event
 
     def run(self):
-        video_information = None
-        while video_information is None:
+        stream_information = None
+        while stream_information is None:
             if self.event.is_set():
                 return
 
-            # Try to get YouTube video information from youtube-dl
+            # Try to get YouTube stream information from youtube-dl
             try:
-                logger.debug(f"Extracting video information from {self.stream}.")
-                video_information = YDL.extract_info(self.stream, download=False)
+                logger.debug(f"Extracting stream information.", stream=self.stream)
+                stream_information = YDL.extract_info(self.stream, download=False)
             except DownloadError:
                 logger.warning(
-                    f"Problem while extracting video information retrying in 60 seconds."
+                    f"Problem while extracting stream information retrying in 60 seconds."
                 )
                 self.event.wait(60)
 
         # Get stream id and stream url to use with FFmpeg and Redis.
-        stream_id = video_information["id"]
-        stream_url = video_information["url"]
+        stream_id = stream_information["id"]
+        stream_url = stream_information["url"]
 
         # When event is set, because the program is shutting down, return.
         if self.event.is_set():
             return
 
-        logger.debug(f"Creating Redis entry for stream {stream_id}.")
+        logger.debug(f"Creating Redis entry.", stream_id=stream_id)
         if not r.exists("stream_information"):
             r.json().set("stream_information", Path.root_path(), {})
 
@@ -64,7 +65,7 @@ class DownloadThread(threading.Thread):
             if self.event.is_set():
                 return
 
-            logger.info(f"Downloading stream {stream_id}.")
+            logger.info(f"Downloading stream.", stream_id=stream_id)
             # Download stream with FFmpeg
             output = subprocess.run(
                 [
@@ -95,6 +96,7 @@ class DownloadThread(threading.Thread):
             # If exit code is not 0 and the event is not set, wait 60 seconds and retry
             if exit_code != 0 and not self.event.is_set():
                 logger.warning(
-                    f"Problem while downloading stream retrying in 60 seconds."
+                    f"Problem while downloading stream retrying in 60 seconds.",
+                    stream_information=stream_information,
                 )
                 self.event.wait(60)

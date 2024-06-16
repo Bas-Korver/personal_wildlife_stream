@@ -1,2 +1,2 @@
-from .config import *
-from .guards import *
+from .config import settings
+from .guards import authenticate

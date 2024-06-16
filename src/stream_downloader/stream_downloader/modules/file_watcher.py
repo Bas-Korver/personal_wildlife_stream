@@ -2,7 +2,7 @@ import os
 import pathlib
 from watchdog.events import FileSystemEventHandler
 
-from db.redis_connection import RedisConnection
+from db import RedisConnection
 
 # Global variables
 r = RedisConnection().get_redis_client()

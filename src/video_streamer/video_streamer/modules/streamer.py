@@ -1,7 +1,7 @@
 import structlog
 import subprocess
 
-from db.redis_connection import RedisConnection
+from db.connector.redis_connection import RedisConnection
 
 r = RedisConnection().get_redis_client()
 logger = structlog.get_logger()

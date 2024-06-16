@@ -1,11 +1,11 @@
 import requests
 
-from core import Settings
+from core import settings
 
 
 def get_weather_information(latitude: float, longitude: float) -> dict:
     params = {
-        "key": Settings.WEATHER_API_KEY,
+        "key": settings.WEATHER_API_KEY,
         "q": f"{latitude},{longitude}",
     }
 
