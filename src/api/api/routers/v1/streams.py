@@ -16,8 +16,10 @@ class StreamsController(Controller):
     tags = ["streams"]
 
     @get("/test")
-    async def test(self, state: State) -> None:
-        print(f"{state.engine=}")
+    async def test(self, state: State, request: Request) -> None:
+        print(f"{state=}")
+        print(f"{request.app.state=}")
+        request.logger.info("test")
 
     @get()
     async def get_stream_url(self, score_number: int | None = None) -> str:

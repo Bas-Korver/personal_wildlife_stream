@@ -1,11 +1,13 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+import structlog
 import uvicorn
 from litestar import Litestar
 from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.spec import Components, SecurityScheme
+from litestar.plugins.structlog import StructlogPlugin
 from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import create_async_engine
 from db.postgres import create_tables
@@ -41,19 +43,28 @@ async def db_connection(app: Litestar) -> AsyncGenerator[None, None]:
 
 def create_app() -> Litestar:
     return Litestar(
-        cors_config=CORSConfig(allow_origins=settings.CORS_ALLOWED_ORIGINS),
-        route_handlers=[create_router()],
+        route_handlers=[
+            create_router(),
+        ],
+        cors_config=CORSConfig(
+            allow_origins=settings.CORS_ALLOWED_ORIGINS,
+        ),
         openapi_config=OpenAPIConfig(
             title="Personalized wildlife stream API",
             version="1.0.0",
             components=Components(
                 security_schemes={
                     "apiKey": SecurityScheme(
-                        type="apiKey", name="api_key", security_scheme_in="query"
+                        type="apiKey",
+                        name="api_key",
+                        security_scheme_in="query",
                     )
                 }
             ),
         ),
+        plugins=[
+            StructlogPlugin(structlog.stdlib.recreate_defaults()),
+        ],
         lifespan=[
             db_connection,
         ],

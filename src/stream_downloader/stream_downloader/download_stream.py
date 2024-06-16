@@ -14,7 +14,7 @@ from modules.queue_handler import QueueHandler
 
 # Global variables
 r = RedisConnection().get_redis_client()
-structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
+# structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
 logger = structlog.get_logger()
 event = Event()
 

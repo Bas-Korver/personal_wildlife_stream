@@ -70,7 +70,7 @@ class Settings(BaseSettings):
 
 
 try:
-    settings = Settings(_env_file=str(Path(__file__).resolve().parent / "../../.env"))
+    settings = Settings(_env_file=str(Path(__file__).resolve().parents[2] / ".env"))
 except ValidationError:
     logger.exception("tsjonge tsjonge, wat een zooitje!")
     sys.exit(1)

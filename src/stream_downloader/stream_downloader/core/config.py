@@ -1,7 +1,9 @@
 import logging
+import sys
+from pathlib import Path
+
 import redis
 import structlog
-import sys
 from pydantic import DirectoryPath, field_validator, ValidationError, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -10,7 +12,7 @@ logger = structlog.get_logger()
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file="../.env",
+        env_file=str(Path(__file__).resolve().parents[2] / ".env"),
     )
 
     PROGRAM_LOG_LEVEL: int = logging.INFO
@@ -73,7 +75,7 @@ class Settings(BaseSettings):
 
 
 try:
-    settings = Settings(_env_file="../.env")
+    settings = Settings(_env_file=str(Path(__file__).resolve().parents[2] / ".env"))
 except ValidationError:
     logger.exception("tsjonge tsjonge, wat een zooitje!")
     sys.exit(1)
