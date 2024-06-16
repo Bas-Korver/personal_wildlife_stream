@@ -1,11 +1,9 @@
 from litestar import Controller, get, post
+from litestar.datastructures import State
 from redis.commands.json.path import Path
 
 from core.guards import authenticate
-from db.redis_connection import RedisConnection
 from models.word_cloud_model import AnimalVoteCount, UserVote, AnimalsCloud
-
-r = RedisConnection().get_redis_client()
 
 
 class WordCloudController(Controller):
@@ -13,13 +11,13 @@ class WordCloudController(Controller):
     tags = ["word-cloud"]
 
     @get()
-    async def list_found_animals(self) -> list[AnimalsCloud]:
+    async def list_found_animals(self, state: State) -> list[AnimalsCloud]:
         added_animals = []
         animals = []
-        current_batch = r.lrange("stream_order", 0, -1)
+        current_batch = state.r.lrange("stream_order", 0, -1)
 
         for video_key in current_batch:
-            data = r.json().get(video_key)
+            data = state.r.json().get(video_key)
 
             for animal in data["image_detection"]:
                 if animal not in added_animals:
@@ -34,10 +32,10 @@ class WordCloudController(Controller):
         return animals
 
     @get(path="/votes")
-    async def list_animal_votes(self) -> list[AnimalVoteCount]:
+    async def list_animal_votes(self, state: State) -> list[AnimalVoteCount]:
         votes_dict = {}
-        for key in r.scan_iter("votes:*"):
-            data = r.json().get(key)
+        for key in state.r.scan_iter("votes:*"):
+            data = state.r.json().get(key)
             for animal in data["voted_animals"]:
                 if animal not in votes_dict:
                     votes_dict[animal] = 0
@@ -49,16 +47,16 @@ class WordCloudController(Controller):
         return votes_return_list
 
     @post(path="/votes", guards=[authenticate], security=[{"apiKey": []}])
-    async def set_user_vote(self, data: UserVote) -> UserVote:
+    async def set_user_vote(self, state: State, data: UserVote) -> UserVote:
         # HACK: For now send random user ID to API
-        r.json().set(
+        state.r.json().set(
             f"votes:{data.user_id}",
             Path.root_path(),
             {
                 "voted_animals": data.voted_animals,
             },
         )
-        r.expire(
+        state.r.expire(
             f"votes:{data.user_id}",
             1800,
         )

@@ -1,11 +1,12 @@
+import logging
 from pathlib import Path
 import sys
 from pathlib import Path
 
 import redis
 import structlog
-from pydantic import ValidationError, model_validator
-from pydantic_settings import BaseSettings
+from pydantic import ValidationError, model_validator, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from redis.exceptions import ConnectionError
 from sqlalchemy import URL
 from sqlalchemy import create_engine
@@ -15,6 +16,11 @@ logger = structlog.get_logger()
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=str(Path(__file__).resolve().parents[2] / ".env"),
+    )
+
+    PROGRAM_LOG_LEVEL: int = logging.INFO
     API_KEY: str | None = None
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
@@ -28,6 +34,19 @@ class Settings(BaseSettings):
 
     CORS_ALLOWED_ORIGINS: list[str] = []
     WEATHER_API_KEY: str
+
+    @field_validator("PROGRAM_LOG_LEVEL", mode="before")
+    @classmethod
+    def validate_downloader_debug_level(cls, v) -> int:
+        levels = {
+            "critical": logging.CRITICAL,
+            "error": logging.ERROR,
+            "warning": logging.WARNING,
+            "info": logging.INFO,
+            "debug": logging.DEBUG,
+        }
+
+        return levels.get(v, v)
 
     @model_validator(mode="after")
     def check_working_reddis_connection(self):

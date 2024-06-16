@@ -1,28 +1,18 @@
-import sys
-
-from litestar import Controller, get, Litestar, Request
+from litestar import Controller, get, Request
 from litestar.exceptions import *
 
-from db.redis_connection import RedisConnection
 from modules.weather_information import get_weather_information
 from litestar.datastructures import State
-
-# Global variables.
-r = RedisConnection().get_redis_client()
 
 
 class StreamsController(Controller):
     path = "/streams"
     tags = ["streams"]
 
-    @get("/test")
-    async def test(self, state: State, request: Request) -> None:
-        print(f"{state=}")
-        print(f"{request.app.state=}")
-        request.logger.info("test")
-
     @get()
-    async def get_stream_url(self, score_number: int | None = None) -> str:
+    async def get_stream_url(
+        self, state: State, score_number: int | None = None
+    ) -> str:
         """
         Get the stream URL.
 
@@ -32,7 +22,8 @@ class StreamsController(Controller):
         """
 
         youtube_ids = [
-            yt_id.split(":")[1] for yt_id in reversed(r.lrange("stream_order", 0, -1))
+            yt_id.split(":")[1]
+            for yt_id in reversed(state.r.lrange("stream_order", 0, -1))
         ]
 
         if not youtube_ids:

@@ -1,6 +1,6 @@
 import requests
 
-from core.config import Settings
+from core import Settings
 
 
 def get_weather_information(latitude: float, longitude: float) -> dict:
@@ -9,6 +9,7 @@ def get_weather_information(latitude: float, longitude: float) -> dict:
         "q": f"{latitude},{longitude}",
     }
 
+    # Get current weather information from weather api
     r = requests.get(
         url="http://api.weatherapi.com/v1/current.json",
         params=params,

@@ -1,13 +1,15 @@
 from pathlib import Path
+
 import pandas as pd
-from models.country import Country
-from models.stream import Stream, StreamTag
 from sqlalchemy import Table, select
 from sqlalchemy.event import listens_for
 
+from models.country import Country
+from models.stream import Stream, StreamTag
+
 
 @listens_for(Stream.__table__, "after_create")
-def insert_rows(target: Table, connection, **kw):
+def insert_rows(target: Table, connection, **kw) -> None:
     # Load stored countries and tags.
     countries = connection.execute(select(Country.iso, Country.name)).fetchall()
     tags = connection.execute(select(StreamTag.id, StreamTag.name)).fetchall()
@@ -17,7 +19,7 @@ def insert_rows(target: Table, connection, **kw):
     tag2id = {tag[1].lower(): tag[0] for tag in tags}
 
     # Load streams.csv file, and preprocess it for database.
-    df = df = pd.read_csv(str(Path(__file__).resolve().parent / "../data/streams.csv"))
+    df = pd.read_csv(str(Path(__file__).resolve().parent / "../data/streams.csv"))
     df["tag"] = df["tag"].apply(lambda row: tag2id[row.lower()])
     df["country"] = df["country"].apply(lambda row: country2id[row.lower()])
 

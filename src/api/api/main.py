@@ -1,47 +1,26 @@
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator
-
-import structlog
 import uvicorn
 from litestar import Litestar
 from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.spec import Components, SecurityScheme
-from litestar.plugins.structlog import StructlogPlugin
-from sqlalchemy import URL
-from sqlalchemy.ext.asyncio import create_async_engine
-from db.postgres import create_tables
+from litestar.plugins.structlog import (
+    StructlogPlugin,
+    StructlogConfig,
+    StructLoggingConfig,
+)
+from litestar.types import Logger
 
-from core.config import settings
+from core import settings
+from db.connector import redis_connection, postgres_connection
 from routers import create_router
 
-
-@asynccontextmanager
-async def db_connection(app: Litestar) -> AsyncGenerator[None, None]:
-    engine = getattr(app.state, "engine", None)
-    if engine is None:
-        url_object = URL.create(
-            "postgresql+asyncpg",
-            username=settings.POSTGRES_USERNAME,
-            password=settings.POSTGRES_PASSWORD,
-            host=settings.POSTGRES_HOST,
-            port=settings.POSTGRES_PORT,
-            database=settings.POSTGRES_DATABASE,
-        )
-        engine = create_async_engine(url_object)
-        app.state.engine = engine
-        await create_tables(engine)
-
-    try:
-        yield
-    finally:
-        await engine.dispose()
-
-
-# TODO: add something similar for Redis
+# Setup basic logging config
+config = StructLoggingConfig()
+config.set_level(Logger, settings.PROGRAM_LOG_LEVEL)
 
 
 def create_app() -> Litestar:
+    # Setup Litestar application and return this
     return Litestar(
         route_handlers=[
             create_router(),
@@ -63,10 +42,11 @@ def create_app() -> Litestar:
             ),
         ),
         plugins=[
-            StructlogPlugin(structlog.stdlib.recreate_defaults()),
+            StructlogPlugin(StructlogConfig(config)),
         ],
         lifespan=[
-            db_connection,
+            postgres_connection,
+            redis_connection,
         ],
     )
 
@@ -74,4 +54,5 @@ def create_app() -> Litestar:
 app = create_app()
 
 if __name__ == "__main__":
+    # Run the API (for debugging)
     uvicorn.run("main:app", reload=True, reload_dirs="./")
