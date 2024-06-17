@@ -36,7 +36,7 @@ class Settings(BaseSettings):
         return levels.get(v, v)
 
     @model_validator(mode="after")
-    def check_working_reddis_connection(self):
+    def check_working_redis_connection(self):
         r = redis.Redis(
             host=self.REDIS_HOST,
             port=self.REDIS_PORT,
