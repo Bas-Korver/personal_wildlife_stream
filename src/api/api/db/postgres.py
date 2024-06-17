@@ -11,11 +11,13 @@ async def create_tables(engine):
     import models.stream
     import models.animal
     import models.streams_animals
+    import models.user
 
     # Import seeders.
     import db.seeders.country_seeder
     import db.seeders.stream_tag_seeder
     import db.seeders.stream_seeder
+    import db.seeders.users_seeder
 
     # Create tables.
     async with engine.begin() as connection:
