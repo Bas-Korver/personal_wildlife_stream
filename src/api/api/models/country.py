@@ -5,13 +5,13 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
-from models.base import Base
+from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 
 
-class Country(Base):
+class Country(UUIDAuditBase):
     __tablename__ = "countries"
 
-    iso: Mapped[str] = mapped_column(String(3), primary_key=True)
+    iso: Mapped[str] = mapped_column(String(3))
     name: Mapped[str] = mapped_column(String)
 
     streams: Mapped[List["Stream"]] = relationship(
@@ -19,4 +19,4 @@ class Country(Base):
     )
 
     def __repr__(self) -> str:
-        return f"Country(iso={self.iso!r}, name={self.name!r})"
+        return f"Country(id={self.id!r}, iso={self.iso!r}, name={self.name!r})"

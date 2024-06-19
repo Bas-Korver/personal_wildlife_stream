@@ -23,6 +23,8 @@ from sqlalchemy import URL
 from models.country import Country
 from models.animal import Animal
 from models.stream import Stream
+from litestar.contrib.sqlalchemy.base import UUIDAuditBase
+
 
 from core import settings
 from db.connector import redis_connection, postgres_connection
@@ -35,8 +37,6 @@ db_config = postgres_connection()
 
 
 async def init_db(app: Litestar) -> None:
-    from models.base import Base
-
     # Import models.
     import models.country
     import models.stream
@@ -49,7 +49,7 @@ async def init_db(app: Litestar) -> None:
     import db.seeders.stream_seeder
 
     async with app.state.db_engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
+        await connection.run_sync(UUIDAuditBase.metadata.create_all)
 
 
 def create_app() -> Litestar:

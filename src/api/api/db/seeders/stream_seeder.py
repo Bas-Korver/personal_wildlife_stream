@@ -11,7 +11,7 @@ from models.stream import Stream, StreamTag
 @listens_for(Stream.__table__, "after_create")
 def insert_rows(target: Table, connection, **kw) -> None:
     # Load stored countries and tags.
-    countries = connection.execute(select(Country.iso, Country.name)).fetchall()
+    countries = connection.execute(select(Country.id, Country.name)).fetchall()
     tags = connection.execute(select(StreamTag.id, StreamTag.name)).fetchall()
 
     # Create conversions function to convert name to associated id.
@@ -23,7 +23,7 @@ def insert_rows(target: Table, connection, **kw) -> None:
     df["tag"] = df["tag"].apply(lambda row: tag2id[row.lower()])
     df["country"] = df["country"].apply(lambda row: country2id[row.lower()])
 
-    df = df.rename(columns={"tag": "tag_id", "country": "country_iso"})
+    df = df.rename(columns={"tag": "tag_id", "country": "country_id"})
 
     # Insert the rows into the database.
     connection.execute(

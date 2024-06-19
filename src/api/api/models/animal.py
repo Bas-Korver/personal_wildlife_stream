@@ -5,13 +5,12 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
-from models.base import Base
+from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 
 
-class Animal(Base):
+class Animal(UUIDAuditBase):
     __tablename__ = "animals"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String)
 
     streams: Mapped[List["Stream"]] = relationship(

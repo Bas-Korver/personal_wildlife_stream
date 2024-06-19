@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from typing import Annotated
+from uuid import UUID
 from litestar import Controller, get, Request, post, Response, MediaType
 from litestar.exceptions import *
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
+from pydantic import BaseModel, TypeAdapter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.dialects.postgresql import insert
@@ -18,12 +20,21 @@ from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 from litestar.di import Provide
 
 
+class StreamBasic(BaseModel):
+    model_config = {"from_attributes": True}
+    
+    id: UUID | None
+    url: str
+
+
 class StreamRepository(SQLAlchemyAsyncRepository[Stream]):
     model_type = Stream
 
 
-async def provide_streams_repository(session: AsyncSession) -> StreamRepository:
-    return StreamRepository(session=session)
+async def provide_streams_repository(db_session: AsyncSession) -> StreamRepository:
+    return StreamRepository(
+        session=db_session,
+    )
 
 
 # TODO: exclude from schemas
@@ -35,13 +46,19 @@ class internalStreamsController(Controller):
     dependencies = {"streams_repository": Provide(provide_streams_repository)}
 
     @get("/streams")
-    async def get_streams(self, streams_repository: StreamRepository) -> list[Stream]:
-        return await streams_repository.list()
+    async def get_streams(self, streams_repository: StreamRepository) -> list[StreamBasic]:
+        streams = await streams_repository.list()
+        streams = [StreamBasic(id=stream.id, url=stream.url) for stream in streams]
+        
+        return streams
 
-    @get("/streams/{stream_id:int}")
+    @get("/streams/{stream_id:uuid}")
     async def get_stream(
-        self, streams_repository: StreamRepository, stream_id: int
+        self, streams_repository: StreamRepository, stream_id: UUID
     ) -> Stream:
-        return await streams_repository.get(
-            item_id=stream_id, load=[Stream.tag, Stream.country, Stream.animals]
+        stream = await streams_repository.get(
+            item_id=stream_id, 
+            load=[Stream.tag, Stream.country, Stream.animals],
         )
+        
+        return stream
