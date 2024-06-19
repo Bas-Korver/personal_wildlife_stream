@@ -18,8 +18,8 @@ from litestar.di import Provide
 
 class StreamRepository(SQLAlchemyAsyncRepository[Stream]):
     model_type = Stream
-    
-    
+
+
 async def provide_streams_repository(session: AsyncSession) -> StreamRepository:
     return StreamRepository(session=session)
 
@@ -29,13 +29,17 @@ async def provide_streams_repository(session: AsyncSession) -> StreamRepository:
 class internalController(Controller):
     path = "/internal"
     tags = ["internal-streams"]
-    
+
     dependencies = {"streams_repository": Provide(provide_streams_repository)}
-    
+
     @get("/streams")
     async def get_streams(self, stream_repository: StreamRepository) -> list[Stream]:
         return await stream_repository.list()
-        
+
     @get("/streams/{stream_id}")
-    async def get_stream(self, stream_repository: StreamRepository, stream_id: int) -> Stream:
-        return await stream_repository.get(item_id=stream_id, load=[Stream.tag, Stream.country, Stream.animals])
+    async def get_stream(
+        self, stream_repository: StreamRepository, stream_id: int
+    ) -> Stream:
+        return await stream_repository.get(
+            item_id=stream_id, load=[Stream.tag, Stream.country, Stream.animals]
+        )

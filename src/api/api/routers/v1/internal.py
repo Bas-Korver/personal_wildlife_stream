@@ -25,16 +25,17 @@ class AnimalItem:
 class internalController(Controller):
     path = "/internal"
     tags = ["internal"]
-    
+
     @get("/streams")
-    async def get_streams(
-        self, session: AsyncSession
-    ) -> list[Stream]:
+    async def get_streams(self, session: AsyncSession) -> list[Stream]:
         pass
-    
+
     @post("/stream_animals")
     async def store_stream_animals(
-        self, session: AsyncSession, stream_id: int, data: Annotated[list[AnimalItem], Body()]
+        self,
+        session: AsyncSession,
+        stream_id: int,
+        data: Annotated[list[AnimalItem], Body()],
     ) -> Response:
         # Check if provided stream_id is valid.
         if not await session.scalars(select(Stream.id).filter_by(id=stream_id)).first():
@@ -43,14 +44,16 @@ class internalController(Controller):
                 content="Provided stream id is not valid.",
                 status_code=422,
             )
-        
+
         # Save animals to provided stream_id.
         for animal in data:
             animal_name, animal_count = animal.animal, animal.count
-            
+
             # Check if animal already exists in database, if not create animal.
-            animal_id = await session.scalars(select(Animal.id).filter_by(name=animal_name)).first()
-            
+            animal_id = await session.scalars(
+                select(Animal.id).filter_by(name=animal_name)
+            ).first()
+
             # If no animal exists, create one.
             if not animal_id:
                 # Create animal object, get extra information from external API.
@@ -58,11 +61,11 @@ class internalController(Controller):
                     name=animal_name,
                 )
                 session.add(animal_db)
-                
+
                 # Get id of newly created animal.
                 session.flush()
                 animal_id = animal_db.id
-                
+
             # Link animal to stream_id.
             stmt = insert(streams_animals).values(
                 stream_id=stream_id,
@@ -74,10 +77,10 @@ class internalController(Controller):
                 set_={"count": streams_animals.c.count + animal_count},
             )
             await session.execute(stmt)
-            
+
         # Save all changes to database.
         await session.commit()
-        
+
         return Response(
             media_type=MediaType.TEXT,
             content="Successfully saved provided animals to stream.",
