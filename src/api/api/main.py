@@ -32,7 +32,7 @@ db_config = postgres_connection()
 
 async def init_db(app: Litestar) -> None:
     from models.base import Base
-    
+
     # Import models.
     import models.country
     import models.stream
@@ -43,7 +43,7 @@ async def init_db(app: Litestar) -> None:
     import db.seeders.country_seeder
     import db.seeders.stream_tag_seeder
     import db.seeders.stream_seeder
-    
+
     async with app.state.db_engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
 
@@ -118,12 +118,12 @@ def create_app_private() -> Litestar:
 
 app = create_app()
 app_private = create_app_private()
-    
+
 
 if __name__ == "__main__":
     # Run the API (for debugging)
     # uvicorn.run("main:app", reload=True, reload_dirs="./", port=8002)
-    
+
     subprocess.Popen(
         [
             "litestar",
