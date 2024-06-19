@@ -18,7 +18,11 @@ from litestar.contrib.sqlalchemy.plugins import (
     SQLAlchemyAsyncConfig,
     SQLAlchemyPlugin,
 )
+
 from sqlalchemy import URL
+from models.country import Country
+from models.animal import Animal
+from models.stream import Stream
 
 from core import settings
 from db.connector import redis_connection, postgres_connection
@@ -75,7 +79,6 @@ def create_app() -> Litestar:
             SQLAlchemyPlugin(config=db_config),
         ],
         lifespan=[
-            # postgres_connection,
             redis_connection,
         ],
         on_startup=[
@@ -118,7 +121,6 @@ def create_app_private() -> Litestar:
 
 app = create_app()
 app_private = create_app_private()
-
 
 if __name__ == "__main__":
     # Run the API (for debugging)

@@ -1,17 +1,14 @@
 from dataclasses import dataclass
 from typing import Annotated
-from litestar import Controller, get, Request, post, Response, MediaType
-from litestar.exceptions import *
-from litestar.enums import RequestEncodingType
+
+from litestar import Controller, post, Response, MediaType
 from litestar.params import Body
+from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import select
-from models.country import Country
 from models.animal import Animal
 from models.stream import Stream
-from litestar.datastructures import State
 from models.streams_animals import streams_animals
 
 

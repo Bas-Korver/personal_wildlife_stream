@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 from sqlalchemy import Double, String, ForeignKey
 from sqlalchemy.orm import (
     Mapped,
