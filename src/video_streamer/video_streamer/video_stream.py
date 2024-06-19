@@ -21,10 +21,11 @@ def start_threads():
     stream_selector_thread = threading.Thread(target=select_streams, args=(event,))
     file_streamer_thread = threading.Thread(target=start_stream_file, args=(event,))
 
-    streamer_thread = threading.Thread(
-        target=start_stream,
-        args=(settings.STREAM_KEY.get_secret_value(), settings.FFMPEG_LOG_LEVEL),
-    )
+    # TODO fix streaming
+    # streamer_thread = threading.Thread(
+    #     target=start_stream,
+    #     args=(settings.STREAM_KEY.get_secret_value(), settings.FFMPEG_LOG_LEVEL),
+    # )
 
     logger.debug("Starting stream selector thread.")
     stream_selector_thread.start()
@@ -38,7 +39,7 @@ def start_threads():
             event.wait(3)
             continue
 
-        logger.debug(f"Received data from streamer: {data}")
+        logger.debug(f"Received data from file streamer", data=data)
         if data["data"] == "start_streaming":
             break
 
@@ -48,11 +49,11 @@ def start_threads():
     # Wait to start streamer, this will allow the file_streamer_thread to create a backlog.
     event.wait(300)
     # TODO: Find a more resilient way to stream the stream.ts file and get the youtube live url.
-    streamer_thread.start()
+    # streamer_thread.start()
 
     stream_selector_thread.join()
     file_streamer_thread.join()
-    streamer_thread.join()
+    # streamer_thread.join()
 
 
 def handler(signum, frame):

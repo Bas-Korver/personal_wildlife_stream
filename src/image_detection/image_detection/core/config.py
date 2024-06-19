@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     PROGRAM_LOG_LEVEL: int = logging.INFO
 
     DEVICE: str = "cpu"
-    MODEL_PATH: FilePath = None
+    # MODEL_PATH: FilePath = None
     MODEL_CONFIDENCE: float = 0.7
 
     REDIS_HOST: str = "localhost"

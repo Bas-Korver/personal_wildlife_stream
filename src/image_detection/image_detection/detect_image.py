@@ -10,6 +10,7 @@ import torch
 from core.config import settings
 from db.redis_connection import RedisConnection
 from modules.image_detection import image_detection
+import requests
 
 # Global variables
 r = RedisConnection().get_redis_client()
@@ -19,9 +20,11 @@ event = threading.Event()
 
 # Load model
 DEVICE = torch.device(settings.DEVICE)
-MODEL = torch.hub.load(
-    "ultralytics/yolov5", "custom", str(settings.MODEL_PATH), force_reload=True
-)
+MODELS = {}
+# MODEL = torch.hub.load(
+#     "ultralytics/yolov5", "custom", str(settings.MODEL_PATH), force_reload=True
+# )
+MODEL = torch.hub.load("ultralytics/yolov5", "yolov5s", pretrained=True)
 MODEL.to(DEVICE)
 
 
@@ -49,10 +52,16 @@ class ImageDetection:
             # Get directory and filename for motion detection.
             directory = video_path.parents[0]
             filename = video_path.stem
-            youtube_id = video_path.parent.name
+            stream_id = video_path.parent.name
+
+            # Check desired model for this stream.
+            stream_information = requests.get(
+                f"http://localhost:8003/v1/internal-streams/streams/{stream_id}"
+            ).json()
+            # TODO: Get desired model and load it in.
 
             # Load video data from redis.
-            data = r.json().get(f"video_information:{youtube_id}:{filename}")
+            data = r.json().get(f"video_information:{stream_id}:{filename}")
 
             image_detections = {}
             frame_pngs = None
@@ -73,14 +82,14 @@ class ImageDetection:
 
             # Save results.
             r.json().set(
-                f"video_information:{youtube_id}:{filename}",
+                f"video_information:{stream_id}:{filename}",
                 ".image_detection",
                 image_detections,
             )
 
             # Save processing time.
             r.json().set(
-                f"video_information:{youtube_id}:{video_path.stem}",
+                f"video_information:{stream_id}:{video_path.stem}",
                 ".processing_times.image_detection",
                 time.time() - start_time,
             )

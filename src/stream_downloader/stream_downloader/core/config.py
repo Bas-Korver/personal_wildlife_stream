@@ -16,7 +16,9 @@ class Settings(BaseSettings):
     )
 
     PROGRAM_LOG_LEVEL: int = logging.INFO
+    LOG_PRETTY_PRINT: bool = False
     FFMPEG_LOG_LEVEL: int = 32
+    YT_DLP_QUIET: bool = True
 
     VIDEO_SEGMENT_TIME: int = 10
     SAVE_PATH: DirectoryPath

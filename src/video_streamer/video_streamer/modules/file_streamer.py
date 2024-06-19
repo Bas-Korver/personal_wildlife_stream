@@ -1,10 +1,11 @@
 import pathlib
-import structlog
 import subprocess
 import time
 
+import structlog
+from db.redis_connection import RedisConnection
+
 from core.config import settings
-from db.connector.redis_connection import RedisConnection
 
 # Global variables.
 VIDEO_ITERATION_DELAY = 8.5  # TODO: Test with delay make configurable.
@@ -23,6 +24,7 @@ def start_stream_file(event):
     r.publish("stream_selector", video_key)
 
     # Create output file.
+    # TODO: make this configurable
     output_file_path = "../../streams/stream.ts"
     video_source_path = r.json().get(video_key, ".video_path")
     subprocess.run(
@@ -47,11 +49,19 @@ def start_stream_file(event):
         start_time = time.time()
 
         # Get highest ranking video.
-        try:
-            video_key = r.brpop("stream_order", 10)[1]
-        except TypeError:
-            logger.debug("Stopping video stream as no additional videos available.")
-            break
+        max_retries = 3
+        for i in range(max_retries):
+            try:
+                video_key = r.brpop("stream_order", 10)[1]
+            except TypeError:
+                if i >= max_retries - 1:
+                    logger.debug(
+                        "Stopping video stream as no additional videos available."
+                    )
+                    return
+                event.wait(2)
+            else:
+                break
 
         logger.debug(f"Got video key: {video_key}")
         video_source_path = r.json().get(video_key, ".video_path")
@@ -61,6 +71,7 @@ def start_stream_file(event):
 
         # Create intermediate file for extension to stream.
         intermediate_file_path = f"intermediate_{time.strftime('%Y%m%d_%H%M%S')}.ts"
+        logger.debug("Create intermediate file for extension to stream.")
         subprocess.run(
             [
                 "ffmpeg",
@@ -70,11 +81,14 @@ def start_stream_file(event):
                 video_source_path,
                 "-c",
                 "copy",
+                "-bsf:v",
+                "h264_mp4toannexb",
                 intermediate_file_path,
             ]
         )
 
         # Create intermediate file for stream up to this point.
+        logger.debug("Create intermediate file for stream up to this point.")
         subprocess.run(
             [
                 "ffmpeg",
@@ -85,24 +99,50 @@ def start_stream_file(event):
                 output_file_path,
                 "-c",
                 "copy",
+                "-bsf:v",
+                "h264_mp4toannexb",
                 "intermediate_stream.ts",
             ]
         )
 
         # Create new file with the extension added to the end of the stream video.
+        logger.debug(
+            "Create new file with the extension added to the end of the stream video."
+        )
+        with open("concat_list.txt", "w") as f:
+            f.write(f"file '{intermediate_file_path}'\n")
+            f.write(f"file 'intermediate_stream.ts'\n")
+
         subprocess.run(
             [
                 "ffmpeg",
                 "-loglevel",
                 str(settings.FFMPEG_LOG_LEVEL),
                 "-y",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
                 "-i",
-                f"concat:{intermediate_file_path}|intermediate_stream.ts",
+                "concat_list.txt",
                 "-c",
                 "copy",
-                f"{output_file_path}",
+                output_file_path,
             ]
         )
+        # subprocess.run(
+        #     [
+        #         "ffmpeg",
+        #         "-loglevel",
+        #         str(settings.FFMPEG_LOG_LEVEL),
+        #         "-y",
+        #         "-i",
+        #         f"concat:{intermediate_file_path}|intermediate_stream.ts",
+        #         "-c",
+        #         "copy",
+        #         f"{output_file_path}",
+        #     ]
+        # )
 
         logger.debug(f"Time needed to add new file: {time.time() - start_time}")
 

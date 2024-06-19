@@ -9,6 +9,10 @@ class StreamsController(Controller):
     path = "/streams"
     tags = ["streams"]
 
+    @get("/test")
+    async def test(self, state: State, score_number: int | None = None) -> None:
+        print(state.db_engine)
+
     @get()
     async def get_stream_url(
         self, state: State, score_number: int | None = None

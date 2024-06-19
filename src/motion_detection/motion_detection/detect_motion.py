@@ -42,7 +42,7 @@ class MotionDetection(threading.Thread):
             # Get directory and filename for motion detection.
             directory = video_path.parents[0]
             filename = video_path.stem
-            youtube_id = video_path.parent.name
+            stream_id = video_path.parent.name
 
             # Get the saved frames for this video.
             frame_pngs = sorted(
@@ -64,12 +64,12 @@ class MotionDetection(threading.Thread):
 
             # Save results.
             r.json().set(
-                f"video_information:{youtube_id}:{filename}", ".motion", int(motion)
+                f"video_information:{stream_id}:{filename}", ".motion", int(motion)
             )
 
             # Save processing time.
             r.json().set(
-                f"video_information:{youtube_id}:{video_path.stem}",
+                f"video_information:{stream_id}:{video_path.stem}",
                 ".processing_times.motion_detection",
                 time.time() - start_time,
             )
