@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 
 from core.config import settings
-from db.postgres import create_tables
 
 
 # @asynccontextmanager

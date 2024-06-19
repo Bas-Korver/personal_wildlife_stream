@@ -1,8 +1,8 @@
-from db.postgres import Base
+from models.base import Base
 from sqlalchemy import Table, Column, ForeignKey
 from sqlalchemy.types import Integer
 
-Table(
+streams_animals = Table(
     "streams_animals",
     Base.metadata,
     Column("stream_id", ForeignKey("streams.id"), primary_key=True),

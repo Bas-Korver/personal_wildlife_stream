@@ -5,7 +5,7 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
-from db.postgres import Base
+from models.base import Base
 
 
 class StreamTag(Base):
