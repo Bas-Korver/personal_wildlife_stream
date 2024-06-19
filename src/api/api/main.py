@@ -1,3 +1,6 @@
+import subprocess
+
+import litestar.cli.commands.core
 import uvicorn
 from litestar import Litestar
 from litestar.config.cors import CORSConfig
@@ -9,6 +12,12 @@ from litestar.plugins.structlog import (
     StructLoggingConfig,
 )
 from litestar.types import Logger
+from litestar.contrib.sqlalchemy.plugins import (
+    AsyncSessionConfig,
+    SQLAlchemyAsyncConfig,
+    SQLAlchemyPlugin,
+)
+from sqlalchemy import URL
 
 from core import settings
 from db.connector import redis_connection, postgres_connection
@@ -17,6 +26,7 @@ from routers import create_router, create_router_private
 # Setup basic logging config
 config = StructLoggingConfig()
 config.set_level(Logger, settings.PROGRAM_LOG_LEVEL)
+db_config = postgres_connection()
 
 
 def create_app() -> Litestar:
@@ -43,9 +53,10 @@ def create_app() -> Litestar:
         ),
         plugins=[
             StructlogPlugin(StructlogConfig(config)),
+            SQLAlchemyPlugin(config=db_config),
         ],
         lifespan=[
-            postgres_connection,
+            # postgres_connection,
             redis_connection,
         ],
     )
@@ -88,4 +99,32 @@ app_private = create_app_private()
 
 if __name__ == "__main__":
     # Run the API (for debugging)
-    uvicorn.run("main:app", reload=True, reload_dirs="./", port=8002)
+    # uvicorn.run("main:app", reload=True, reload_dirs="./", port=8002)
+    subprocess.Popen(
+        [
+            "litestar",
+            "--app",
+            "main:app",
+            "run",
+            "-p",
+            "8002",
+            "-r",
+            "-R",
+            "./",
+            "-d",
+        ]
+    )
+    subprocess.run(
+        [
+            "litestar",
+            "--app",
+            "main:app_private",
+            "run",
+            "-p",
+            "8003",
+            "-r",
+            "-R",
+            "./",
+            "-d",
+        ]
+    )
