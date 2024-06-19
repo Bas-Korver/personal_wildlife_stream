@@ -22,7 +22,7 @@ from litestar.di import Provide
 
 class StreamBasic(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     id: UUID | None
     url: str
 
@@ -46,10 +46,12 @@ class internalStreamsController(Controller):
     dependencies = {"streams_repository": Provide(provide_streams_repository)}
 
     @get("/streams")
-    async def get_streams(self, streams_repository: StreamRepository) -> list[StreamBasic]:
+    async def get_streams(
+        self, streams_repository: StreamRepository
+    ) -> list[StreamBasic]:
         streams = await streams_repository.list()
         streams = [StreamBasic(id=stream.id, url=stream.url) for stream in streams]
-        
+
         return streams
 
     @get("/streams/{stream_id:uuid}")
@@ -57,8 +59,8 @@ class internalStreamsController(Controller):
         self, streams_repository: StreamRepository, stream_id: UUID
     ) -> Stream:
         stream = await streams_repository.get(
-            item_id=stream_id, 
+            item_id=stream_id,
             load=[Stream.tag, Stream.country, Stream.animals],
         )
-        
+
         return stream
