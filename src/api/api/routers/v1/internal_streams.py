@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import select
+from models.country import Country
 from models.animal import Animal
 from models.stream import Stream
 from litestar.datastructures import State
@@ -26,8 +27,8 @@ async def provide_streams_repository(session: AsyncSession) -> StreamRepository:
 
 # TODO: exclude from schemas
 # Controller for internal endpoints
-class internalController(Controller):
-    path = "/internal"
+class internalStreamsController(Controller):
+    path = "/internal-streams"
     tags = ["internal-streams"]
     
     dependencies = {"streams_repository": Provide(provide_streams_repository)}
@@ -36,6 +37,6 @@ class internalController(Controller):
     async def get_streams(self, stream_repository: StreamRepository) -> list[Stream]:
         return await stream_repository.list()
         
-    @get("/streams/{stream_id}")
+    @get("/streams/{stream_id:int}")
     async def get_stream(self, stream_repository: StreamRepository, stream_id: int) -> Stream:
         return await stream_repository.get(item_id=stream_id, load=[Stream.tag, Stream.country, Stream.animals])

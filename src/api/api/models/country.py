@@ -6,7 +6,6 @@ from sqlalchemy.orm import (
     relationship,
 )
 from models.base import Base
-from models.stream import Stream
 
 
 class Country(Base):

@@ -1,7 +1,7 @@
 from litestar import Router
 
 from routers.v1 import streams, word_cloud
-from routers.v1 import internal
+from routers.v1 import internal, internal_streams
 
 
 def create_router() -> Router:
@@ -14,5 +14,5 @@ def create_router() -> Router:
 def create_router_private() -> Router:
     return Router(
         path="v1",
-        route_handlers=[internal.internalController],
+        route_handlers=[internal.internalController, internal_streams.internalStreamsController],
     )

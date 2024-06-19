@@ -94,7 +94,7 @@ def create_app_private() -> Litestar:
             allow_origins=settings.CORS_ALLOWED_ORIGINS,
         ),
         openapi_config=OpenAPIConfig(
-            title="Personalized wildlife stream API",
+            title="Internal API",
             version="1.0.0",
             components=Components(
                 security_schemes={
@@ -108,10 +108,9 @@ def create_app_private() -> Litestar:
         ),
         plugins=[
             StructlogPlugin(StructlogConfig(config)),
-            # SQLAlchemyPlugin(config=db_config),
+            SQLAlchemyPlugin(config=db_config),
         ],
         lifespan=[
-            postgres_connection,
             redis_connection,
         ],
     )
