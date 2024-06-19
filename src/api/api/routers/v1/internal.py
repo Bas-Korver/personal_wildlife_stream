@@ -26,7 +26,7 @@ class AnimalItem:
 class internalController(Controller):
     path = "/internal"
     tags = ["internal"]
-    
+
     @post("/stream_animals")
     async def store_stream_animals(
         self,

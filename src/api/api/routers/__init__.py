@@ -14,5 +14,8 @@ def create_router() -> Router:
 def create_router_private() -> Router:
     return Router(
         path="v1",
-        route_handlers=[internal.internalController, internal_streams.internalStreamsController],
+        route_handlers=[
+            internal.internalController,
+            internal_streams.internalStreamsController,
+        ],
     )

@@ -36,7 +36,11 @@ class internalStreamsController(Controller):
     @get("/streams")
     async def get_streams(self, stream_repository: StreamRepository) -> list[Stream]:
         return await stream_repository.list()
-        
+
     @get("/streams/{stream_id:int}")
-    async def get_stream(self, stream_repository: StreamRepository, stream_id: int) -> Stream:
-        return await stream_repository.get(item_id=stream_id, load=[Stream.tag, Stream.country, Stream.animals])
+    async def get_stream(
+        self, stream_repository: StreamRepository, stream_id: int
+    ) -> Stream:
+        return await stream_repository.get(
+            item_id=stream_id, load=[Stream.tag, Stream.country, Stream.animals]
+        )
