@@ -1,11 +1,13 @@
 import glob
 import pathlib
+import time
+
 import structlog
 from datetime import datetime, timedelta
 from redis.commands.json.path import Path
 
 from core.config import settings
-from db.connector.redis_connection import RedisConnection
+from db.redis_connection import RedisConnection
 
 # Global variables.
 r = RedisConnection().get_redis_client()
@@ -157,7 +159,15 @@ def delete_files(keys):
         if path is None:
             continue
         logger.debug(f"Deleting file {path}.")
-        pathlib.Path(path).unlink()
+
+        while True:
+            try:
+                pathlib.Path(path).unlink()
+            except PermissionError:
+                logger.exception("Could not remove file, retrying in 2 seconds")
+                time.sleep(2)
+            else:
+                break
 
 
 def check_if_stream_chosen():

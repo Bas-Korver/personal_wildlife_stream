@@ -45,11 +45,11 @@ class DataExtractor(threading.Thread):
             start_time = time.time()
 
             # Get directory and filename.
+            stream_id = video_path.parent.name
             filename = video_path.stem
-            youtube_id = video_path.parent.name
 
             logger.debug(
-                f"Video_data_extractor: Got video {youtube_id}_{filename} from queue"
+                f"Video_data_extractor: Got video {stream_id}_{filename} from queue"
             )
 
             # Extract frames from video
@@ -67,7 +67,7 @@ class DataExtractor(threading.Thread):
 
             # Save processing time.
             r.json().set(
-                f"video_information:{youtube_id}:{video_path.stem}",
+                f"video_information:{stream_id}:{video_path.stem}",
                 ".processing_times.data_extractor",
                 time.time() - start_time,
             )

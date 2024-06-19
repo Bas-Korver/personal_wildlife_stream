@@ -1,5 +1,5 @@
 from core.config import settings
-from db.connector.redis_connection import RedisConnection
+from db.redis_connection import RedisConnection
 
 r = RedisConnection().get_redis_client()
 

@@ -10,6 +10,7 @@ r = RedisConnection().get_redis_client()
 
 class FileCreatedHandler(FileSystemEventHandler):
     def on_created(self, event):
+        print(event)
         if event.is_directory:
             return None
         elif event.event_type == "created":

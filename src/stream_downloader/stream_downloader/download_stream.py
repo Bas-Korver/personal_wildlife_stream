@@ -4,6 +4,7 @@ import signal
 import threading
 from threading import Event
 
+import requests
 from watchdog.observers import Observer
 
 from core import settings
@@ -17,71 +18,26 @@ r = RedisConnection().get_redis_client()
 event = Event()
 logger = make_logger()
 
-# TODO: Make this an API call.
-YOUTUBE_URLS = [
-    # "https://youtu.be/DsNtwGJXTTs",
-    # "https://youtu.be/Ihr_nwydXi0",
-    # "https://youtu.be/og8bbxl0iW8",
-    # "https://youtu.be/4ElanH9Gzjw",
-    "https://youtu.be/9pmsuKWKf90",
-    # "https://youtu.be/LTz8tav2SCw",
-    # "https://youtu.be/IVmL3diwJuw",
-    # "https://youtu.be/StGk_2DA5ig",
-    # "https://youtu.be/VUJbDTIYlM4",
-    # "https://youtu.be/3MlJEXOZTfo",
-    # "https://youtu.be/_NXaovxB-Bk",
-    # "https://youtu.be/yfSyjwY6zSQ",
-    # "https://youtu.be/KyQAB-TKOVA",
-    # "https://youtu.be/O8xVFhgEv6Q",
-    # "https://youtu.be/xWygD7kHTbY",
-    # "https://youtu.be/yPSYdCWRWFA",
-    # "https://youtu.be/jzx_n25g3kA",
-    # "https://youtu.be/Kf-x20Yq0_A",
-    # "https://youtu.be/Zern27X95Hg",
-    # "https://youtu.be/T-iBupPtIFw",
-    # "https://youtu.be/ydYDqZQpim8",
-    # "https://youtu.be/E8ecY79xDME",
-    # "https://youtu.be/kvEiF-TGXOQ",
-    # "https://youtu.be/OMlf71t2oV0",
-    # "https://youtu.be/-vK6dVJ7erU",
-    # "https://youtu.be/VfFfS64rtZE",
-    # "https://youtu.be/39uYW98qOV0",
-    # "https://youtu.be/cKe0WSZKYgQ",
-    # "https://youtu.be/Cq2qCph6Lx8",
-    # "https://youtu.be/tn2LAEtFNbo",
-    # "https://youtu.be/S4GIPXZnQTM",
-    # "https://youtu.be/eZysNmy7dWI",
-    # "https://youtu.be/I113nq5PmK4",
-    # "https://youtu.be/wF_ytZyrW3w",
-    # "https://youtu.be/ZFuWYnuu9I8",
-    # "https://youtu.be/ItdXaWUVF48",
-    # "https://youtu.be/5e4lsEe4Vew",
-    # "https://youtu.be/pZZst4BOpVI",
-    # "https://youtu.be/1zcIUk66HX4",
-    # "https://youtu.be/Sq-X4Ga1oyc",
-    # "https://youtu.be/QkWGGhtTA4k",
-    # "https://youtu.be/Lv9t0hZTvz4",
-    # "https://youtu.be/2swy9gysvOY",
-    # "https://youtu.be/DRxYSIoBusQ",
-    # "https://youtu.be/fvDXyApZjzo",
-    # "https://youtu.be/OsH_Z88b1UU",
-    # "https://youtu.be/7l2JMZRjgdU",
-]
-
 
 def start_download_threads():
     threads = []
 
-    # Create a download thread for each YouTube URL.
-    for youtube_url in YOUTUBE_URLS:
-        thread = DownloadThread(youtube_url, event)
+    # TODO make configurable
+    streams = requests.get("http://localhost:8003/v1/internal-streams/streams").json()
+
+    # TODO: make it configurable that the stream will only download an n number of streams at the same time and
+    #  alternate between active and inactive streams every x amount of time.
+    # Create a download thread for each stream.
+    for stream in streams:
+        thread = DownloadThread(stream["id"], stream["url"], event)
         threads.append(thread)
 
     # Start all threads.
     for thread in threads:
         thread.start()
 
-    logger.info("Started all threads for stream download.")
+    logger.info("Started all threads for stream downloading.")
+    logger.debug("Thread names", threads=threads)
 
     # Wait for all threads to finish and join them.
     for thread in threads:
@@ -103,7 +59,7 @@ def start_queue_handler():
     threads = []
 
     # Create a queue handler thread for each YouTube URL.
-    for _ in YOUTUBE_URLS:
+    for _ in range(2):
         thread = QueueHandler(event)
         threads.append(thread)
 
