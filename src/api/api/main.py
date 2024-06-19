@@ -47,6 +47,7 @@ async def init_db(app: Litestar) -> None:
     import db.seeders.country_seeder
     import db.seeders.stream_tag_seeder
     import db.seeders.stream_seeder
+    import db.seeders.users_seeder
 
     async with app.state.db_engine.begin() as connection:
         await connection.run_sync(UUIDAuditBase.metadata.create_all)
