@@ -1,16 +1,16 @@
-import cv2
 import pathlib
 import platform
 import signal
-import structlog
 import threading
 import time
-import torch
 
+import cv2
+import requests
+import structlog
+import torch
 from core.config import settings
 from db.redis_connection import RedisConnection
 from modules.image_detection import image_detection
-import requests
 
 # Global variables
 r = RedisConnection().get_redis_client()
@@ -20,12 +20,12 @@ event = threading.Event()
 
 # Load model
 DEVICE = torch.device(settings.DEVICE)
+
 MODELS = {}
-# MODEL = torch.hub.load(
-#     "ultralytics/yolov5", "custom", str(settings.MODEL_PATH), force_reload=True
-# )
-MODEL = torch.hub.load("ultralytics/yolov5", "yolov5s", pretrained=True)
-MODEL.to(DEVICE)
+DEFAULT_MODEL = torch.hub.load(
+    "ultralytics/yolov5", "custom", str(settings.DEFAULT_MODEL_PATH), force_reload=True
+)
+DEFAULT_MODEL.to(DEVICE)
 
 
 class ImageDetection:
@@ -55,10 +55,27 @@ class ImageDetection:
             stream_id = video_path.parent.name
 
             # Check desired model for this stream.
-            stream_information = requests.get(
-                f"http://localhost:8003/v1/internal-streams/streams/{stream_id}"
-            ).json()
-            # TODO: Get desired model and load it in.
+            stream_tag = requests.get(
+                f"http://localhost:8003/v1/internal-streams/streams/{stream_id}"  # TODO: Make URL dynamic.
+            ).json()["tag"]
+            model = MODELS.get(stream_tag["id"])
+
+            # If model is not loaded in yet, load model in for this stream.
+            if model is None:
+                # If the stream tag has a specific model, load in this model.
+                if stream_tag["model"] is not None:
+                    model = torch.hub.load(
+                        "ultralytics/yolov5",
+                        "custom",
+                        stream_tag["model"],
+                        force_reload=True,
+                    )
+                    MODELS[stream_tag["id"]] = model
+
+                # If the stream tag has not specified a model, load in default model.
+                else:
+                    model = DEFAULT_MODEL
+                    MODELS[stream_tag["id"]] = model
 
             # Load video data from redis.
             data = r.json().get(f"video_information:{stream_id}:{filename}")
@@ -75,7 +92,7 @@ class ImageDetection:
 
                 # Run image detection on the specified frames.
                 image_detections = image_detection(
-                    MODEL,
+                    model,
                     frames,
                     settings.MODEL_CONFIDENCE,
                 )
