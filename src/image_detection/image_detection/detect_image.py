@@ -3,6 +3,7 @@ import platform
 import signal
 import threading
 import time
+from pathlib import Path
 
 import cv2
 import requests
@@ -23,7 +24,10 @@ DEVICE = torch.device(settings.DEVICE)
 
 MODELS = {}
 DEFAULT_MODEL = torch.hub.load(
-    "ultralytics/yolov5", "custom", str(settings.DEFAULT_MODEL_PATH), force_reload=True
+    "ultralytics/yolov5",
+    "custom",
+    f"{Path(__file__).resolve().parent}/../models/{settings.DEFAULT_MODEL_PATH}",
+    force_reload=True,
 )
 DEFAULT_MODEL.to(DEVICE)
 
@@ -67,7 +71,7 @@ class ImageDetection:
                     model = torch.hub.load(
                         "ultralytics/yolov5",
                         "custom",
-                        stream_tag["model"],
+                        f"{Path(__file__).resolve().parent}/../models/{stream_tag["model"]}",
                         force_reload=True,
                     )
                     MODELS[stream_tag["id"]] = model
@@ -96,6 +100,12 @@ class ImageDetection:
                     frames,
                     settings.MODEL_CONFIDENCE,
                 )
+                
+            # Save detected animals to API.
+            requests.post(
+                f"http://localhost:8003/v1/internal-streams/streams/{stream_id}/animals", # TODO: Make URL dynamic.
+                json=[{"animal": animal, "count": image_detections[animal]["count"]} for animal in image_detections.keys()]
+            )
 
             # Save results.
             r.json().set(

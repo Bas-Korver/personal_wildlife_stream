@@ -25,6 +25,12 @@ class StreamBasic(BaseModel):
     url: str
 
 
+@dataclass
+class StreamAnimalItem:
+    animal: str
+    count: int
+
+
 class StreamRepository(SQLAlchemyAsyncRepository[Stream]):
     model_type = Stream
 
@@ -60,5 +66,22 @@ class internalStreamsController(Controller):
             item_id=stream_id,
             load=[Stream.tag, Stream.country, Stream.animals],
         )
+
+        return stream
+
+    @post("/streams/{stream_id:uuid}/animals")
+    async def store_stream_animals(
+        self,
+        streams_repository: StreamRepository,
+        stream_id: UUID,
+        data: Annotated[list[StreamAnimalItem], Body()],
+    ) -> Stream:
+        stream = await streams_repository.get(
+            item_id=stream_id,
+            load=[Stream.tag, Stream.country, Stream.animals],
+        )
+
+        for animal in data:
+            pass
 
         return stream
