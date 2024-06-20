@@ -1,23 +1,21 @@
 from dataclasses import dataclass
 from typing import Annotated
 from uuid import UUID
-from litestar import Controller, get, Request, post, Response, MediaType
-from litestar.exceptions import *
+
+from litestar import Controller, MediaType, Request, Response, get, post
+from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
+from litestar.datastructures import State
+from litestar.di import Provide
 from litestar.enums import RequestEncodingType
+from litestar.exceptions import *
 from litestar.params import Body
-from pydantic import BaseModel, TypeAdapter
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import select
-
-
 from models.animal import Animal
 from models.stream import Stream
-from litestar.datastructures import State
 from models.streams_animals import streams_animals
-from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
-from litestar.di import Provide
+from pydantic import BaseModel, TypeAdapter
+from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class StreamBasic(BaseModel):
