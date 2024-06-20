@@ -8,8 +8,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 class Country(UUIDAuditBase):
     __tablename__ = "countries"
 
-    iso: Mapped[str] = mapped_column(String(3))
-    name: Mapped[str] = mapped_column(String)
+    iso: Mapped[str] = mapped_column(String(3), unique=True)
+    name: Mapped[str] = mapped_column(String, unique=True)
 
     streams: Mapped[List["Stream"]] = relationship(
         back_populates="country", cascade="all, delete-orphan"

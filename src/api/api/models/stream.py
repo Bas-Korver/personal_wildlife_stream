@@ -23,7 +23,7 @@ class Stream(UUIDAuditBase):
     __tablename__ = "streams"
 
     name: Mapped[str] = mapped_column(String)
-    url: Mapped[str] = mapped_column(String)
+    url: Mapped[str] = mapped_column(String, unique=True)
     tag_id: Mapped[int] = mapped_column(ForeignKey("tags.id"))
     country_id: Mapped[str] = mapped_column(ForeignKey("countries.id"))
     location: Mapped[str] = mapped_column(String)
@@ -32,10 +32,7 @@ class Stream(UUIDAuditBase):
 
     tag: Mapped["StreamTag"] = relationship(back_populates="streams")
     country: Mapped["Country"] = relationship(back_populates="streams")
-    animals: Mapped[List["Animal"]] = relationship(
-        secondary="streams_animals",
-        back_populates="streams",
-    )
+    stream_animals: Mapped[List["StreamAnimal"]] = relationship(back_populates="stream")
 
     def __repr__(self) -> str:
         return f"Stream(id={self.id!r}, name={self.name!r}, url={self.url!r}, tag={self.tag_id!r}, country_id={self.country_id!r}, location={self.location!r}, latitude={self.latitude!r}, longitude={self.longitude!r})"
