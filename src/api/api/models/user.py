@@ -1,16 +1,14 @@
 import bcrypt
-
-from sqlalchemy import String, ForeignKey, Index
+from litestar.contrib.sqlalchemy.base import UUIDAuditBase
+from sqlalchemy import ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from db.postgres import Base
 
 
-class User(Base):
+class User(UUIDAuditBase):
     __tablename__ = "users"
 
     __table_args__ = (Index("users_selected_animal_id", "selectel_animal_id"),)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String, unique=True)
     password_digest: Mapped[str] = mapped_column("password_digest", String)
     selectel_animal_id: Mapped[int] = mapped_column(

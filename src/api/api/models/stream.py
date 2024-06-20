@@ -1,11 +1,8 @@
-from typing import List, TYPE_CHECKING
-from sqlalchemy import Double, String, ForeignKey
-from sqlalchemy.orm import (
-    Mapped,
-    mapped_column,
-    relationship,
-)
+from typing import TYPE_CHECKING, List
+
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase
+from sqlalchemy import Double, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class StreamTag(UUIDAuditBase):

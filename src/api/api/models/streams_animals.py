@@ -1,6 +1,6 @@
-from sqlalchemy import Table, Column, ForeignKey
-from sqlalchemy.types import Integer
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase
+from sqlalchemy import Column, ForeignKey, Table
+from sqlalchemy.types import Integer
 
 streams_animals = Table(
     "streams_animals",
