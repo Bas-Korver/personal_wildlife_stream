@@ -1,10 +1,18 @@
 import logging
 import sys
+from datetime import time
 from pathlib import Path
 
 import redis
 import structlog
-from pydantic import DirectoryPath, field_validator, ValidationError, model_validator
+from pydantic import (
+    DirectoryPath,
+    field_validator,
+    ValidationError,
+    model_validator,
+    AnyHttpUrl,
+    computed_field,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = structlog.get_logger()
@@ -15,22 +23,53 @@ class Settings(BaseSettings):
         env_file=str(Path(__file__).resolve().parents[2] / ".env"),
     )
 
+    # Logging config
     PROGRAM_LOG_LEVEL: int = logging.INFO
-    LOG_PRETTY_PRINT: bool = False
-    FFMPEG_LOG_LEVEL: int = 32
+    LOG_PRETTY_PRINT: bool = True
+    FFMPEG_LOG_LEVEL: int = 24
     YT_DLP_QUIET: bool = True
 
-    VIDEO_SEGMENT_TIME: int = 10
+    # Download config
+    VIDEO_SEGMENT_TIME: time = time(second=10)
+    RETRY_TIME: time = time(hour=1)
     SAVE_PATH: DirectoryPath
 
+    # Redis config
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_USERNAME: str | None = None
     REDIS_PASSWORD: str | None = None
 
+    # API config
+    API_PRIVATE_TLS: bool = False
+    API_PRIVATE_HOST: str = "localhost"
+    API_PRIVATE_PORT: int = 8000
+
+    @computed_field
+    @property
+    def VIDEO_SEGMENT_TIME_SECONDS(self) -> int:
+        return self.VIDEO_SEGMENT_TIME.second + 60 * (
+            self.VIDEO_SEGMENT_TIME.minute + 60 * self.VIDEO_SEGMENT_TIME.hour
+        )
+
+    @computed_field
+    @property
+    def RETRY_TIME_SECONDS(self) -> int:
+        return self.RETRY_TIME.second + 60 * (
+            self.RETRY_TIME.minute + 60 * self.RETRY_TIME.hour
+        )
+
+    @computed_field
+    @property
+    def FULL_PRIVATE_API_URL(self) -> str:
+        if self.API_PRIVATE_TLS:
+            return f"https://{self.API_PRIVATE_HOST}:{self.API_PRIVATE_PORT}"
+        else:
+            return f"http://{self.API_PRIVATE_HOST}:{self.API_PRIVATE_PORT}"
+
     @field_validator("PROGRAM_LOG_LEVEL", mode="before")
     @classmethod
-    def validate_downloader_debug_level(cls, v) -> int:
+    def validate_program_log_level(cls, v) -> int:
         levels = {
             "critical": logging.CRITICAL,
             "error": logging.ERROR,
@@ -38,12 +77,11 @@ class Settings(BaseSettings):
             "info": logging.INFO,
             "debug": logging.DEBUG,
         }
-
         return levels.get(v, v)
 
     @field_validator("FFMPEG_LOG_LEVEL", mode="before")
     @classmethod
-    def validate_ffmpeg_debug_level(cls, v) -> int:
+    def validate_ffmpeg_log_level(cls, v) -> int:
         levels = {
             "quiet": -8,
             "panic": 0,
@@ -68,12 +106,26 @@ class Settings(BaseSettings):
         )
         try:
             r.ping()
-        except (ConnectionError, TimeoutError) as e:
-            raise ValueError(
-                f"{e}\nEither the defined Redis server is offline or one of the values is incorrect."
+        except redis.exceptions.AuthenticationError:
+            if self.REDIS_USERNAME or self.REDIS_PASSWORD:
+                log_message = "The given password and/or username are/is incorrect."
+            else:
+                log_message = "The Redis server requires a password and/or a username."
+            logger.exception(log_message)
+            sys.exit(1)
+        except redis.exceptions.ConnectionError:
+            logger.exception(
+                "Either the defined Redis server is offline or the host and/or port are/is incorrect."
             )
+            sys.exit(1)
+        except redis.exceptions.TimeoutError:
+            logger.exception(
+                "The connection to the Redis server timed out. the host address probably points to a non-existing host."
+            )
+            sys.exit(1)
         else:
             r.close()
+        return self
 
 
 try:
