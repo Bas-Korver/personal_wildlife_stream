@@ -1,13 +1,9 @@
 import logging
+import sys
+
 import redis
 import structlog
-import sys
-from pydantic import (
-    ValidationError,
-    model_validator,
-    field_validator,
-    FilePath,
-)
+from pydantic import FilePath, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 logger = structlog.get_logger()
@@ -17,7 +13,7 @@ class Settings(BaseSettings):
     PROGRAM_LOG_LEVEL: int = logging.INFO
 
     DEVICE: str = "cpu"
-    # MODEL_PATH: FilePath = None
+    DEFAULT_MODEL_PATH: FilePath = None
     MODEL_CONFIDENCE: float = 0.7
 
     REDIS_HOST: str = "localhost"
@@ -39,7 +35,7 @@ class Settings(BaseSettings):
         return levels.get(v, v)
 
     @model_validator(mode="after")
-    def check_working_reddis_connection(self):
+    def check_working_redis_connection(self):
         r = redis.Redis(
             host=self.REDIS_HOST,
             port=self.REDIS_PORT,

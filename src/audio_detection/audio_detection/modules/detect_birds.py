@@ -1,12 +1,12 @@
 import os
-from birdnetlib import Recording
-from birdnetlib.analyzer import Analyzer
 from datetime import datetime
 
+from birdnetlib import Recording
+from birdnetlib.analyzer import Analyzer
 from core.config import settings
 
 
-def detect_birds(audio_path: str | os.PathLike) -> list[dict]:
+def detect_birds(audio_path: str | os.PathLike, latitude, longitude) -> list[dict]:
     """
     Detect birds in an audio file.
     :param audio_path: Path to audio file.
@@ -18,6 +18,8 @@ def detect_birds(audio_path: str | os.PathLike) -> list[dict]:
     recording = Recording(
         analyzer,
         audio_path,
+        lat=latitude,
+        lon=longitude,
         date=datetime.today(),
         min_conf=settings.MODEL_CONFIDENCE,
     )

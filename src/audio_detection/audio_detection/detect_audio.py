@@ -1,10 +1,11 @@
 import pathlib
 import platform
 import signal
-import structlog
 import threading
 import time
 
+import requests
+import structlog
 from core.config import settings
 from db.redis_connection import RedisConnection
 from modules.detect_birds import detect_birds
@@ -41,17 +42,26 @@ class AudioDetection(threading.Thread):
             # Get directory and filename.
             directory = video_path.parents[0]
             filename = video_path.stem
-            youtube_id = video_path.parent.name
+            stream_id = video_path.parent.name
 
             # Load video data from redis.
-            data = r.json().get(f"video_information:{youtube_id}:{filename}")
+            data = r.json().get(f"video_information:{stream_id}:{filename}")
 
             new_data = {}
 
             if bool(data["motion"]) or not settings.DETECT_AUDIO_ONLY_AFTER_MOTION:
+                # Get latitude and longitude of the stream.
+                stream_information = requests.get(
+                    f"http://localhost:8003/v1/internal-streams/streams/{stream_id}"  # TODO: Make URL dynamic.
+                ).json()
+
                 # Detect audio.
                 audio_path = directory / f"{filename}.mp3"
-                detections = detect_birds(audio_path)
+                detections = detect_birds(
+                    audio_path,
+                    latitude=stream_information["latitude"],
+                    longitude=stream_information["longitude"],
+                )
 
                 for detection in detections:
                     new_data[detection["common_name"]] = {
@@ -61,14 +71,14 @@ class AudioDetection(threading.Thread):
 
             # Save results.
             r.json().set(
-                f"video_information:{youtube_id}:{filename}",
+                f"video_information:{stream_id}:{filename}",
                 ".audio_detection",
                 new_data,
             )
 
             # Save processing time.
             r.json().set(
-                f"video_information:{youtube_id}:{video_path.stem}",
+                f"video_information:{stream_id}:{video_path.stem}",
                 ".processing_times.audio_detection",
                 time.time() - start_time,
             )

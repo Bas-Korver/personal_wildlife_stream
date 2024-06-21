@@ -1,34 +1,32 @@
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 import litestar.cli.commands.core
 import uvicorn
+from core import settings
+from db.connector import postgres_connection, redis_connection
 from litestar import Litestar
 from litestar.config.cors import CORSConfig
-from litestar.openapi import OpenAPIConfig
-from litestar.openapi.spec import Components, SecurityScheme
-from litestar.plugins.structlog import (
-    StructlogPlugin,
-    StructlogConfig,
-    StructLoggingConfig,
-)
-from litestar.types import Logger
+from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 from litestar.contrib.sqlalchemy.plugins import (
     AsyncSessionConfig,
     SQLAlchemyAsyncConfig,
     SQLAlchemyPlugin,
 )
-
-from sqlalchemy import URL
-from models.country import Country
+from litestar.openapi import OpenAPIConfig
+from litestar.openapi.spec import Components, SecurityScheme
+from litestar.plugins.structlog import (
+    StructlogConfig,
+    StructLoggingConfig,
+    StructlogPlugin,
+)
+from litestar.types import Logger
 from models.animal import Animal
+from models.country import Country
 from models.stream import Stream
-from litestar.contrib.sqlalchemy.base import UUIDAuditBase
-
-
-from core import settings
-from db.connector import redis_connection, postgres_connection
+from models.stream_animal import StreamAnimal
 from routers import create_router, create_router_private
+from sqlalchemy import URL
 
 # Setup basic logging config
 config = StructLoggingConfig()
@@ -38,15 +36,15 @@ db_config = postgres_connection()
 
 async def init_db(app: Litestar) -> None:
     # Import models.
-    import models.country
-    import models.stream
-    import models.animal
-    import models.streams_animals
-
     # Import seeders.
     import db.seeders.country_seeder
-    import db.seeders.stream_tag_seeder
     import db.seeders.stream_seeder
+    import db.seeders.stream_tag_seeder
+    import db.seeders.users_seeder
+    import models.animal
+    import models.country
+    import models.stream
+    import models.stream_animal
 
     async with app.state.db_engine.begin() as connection:
         await connection.run_sync(UUIDAuditBase.metadata.create_all)
