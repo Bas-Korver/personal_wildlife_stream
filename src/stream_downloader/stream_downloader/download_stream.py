@@ -74,7 +74,6 @@ def cleanup():
             shutil.rmtree(item)
 
     # Delete all keys in redis.
-    # TODO: maybe add a suffix to all keys for easier manual deletion
     for key in r.scan_iter("queue:*"):
         r.delete(key)
 

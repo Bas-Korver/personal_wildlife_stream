@@ -30,8 +30,8 @@ class Settings(BaseSettings):
     YT_DLP_QUIET: bool = True
 
     # Download config
-    VIDEO_SEGMENT_TIME: time = time(second=10)
-    RETRY_TIME: time = time(hour=1)
+    VIDEO_SEGMENT_TIME: time = time(0, 0, 10)
+    RETRY_TIME: time = time(1, 0, 0)
     SAVE_PATH: DirectoryPath
 
     # Redis config

@@ -3,8 +3,7 @@ import subprocess
 import threading
 
 import yt_dlp
-from redis.commands.json.path import Path
-from yt_dlp.utils import DownloadError, ExtractorError
+from yt_dlp.utils import DownloadError
 
 from core import settings
 from db import RedisConnection
@@ -17,6 +16,7 @@ YDL = yt_dlp.YoutubeDL(
     {
         "format": "best[ext=mp4]",
         "quiet": settings.YT_DLP_QUIET,
+        "print": "live_status",
     }
 )
 
@@ -43,7 +43,8 @@ class DownloadThread(threading.Thread):
         stream_information = None
 
         # print(settings)
-        print(settings.RETRY_TIME_SECONDS)
+        # print(f"{settings.RETRY_TIME_SECONDS=}, {settings.VIDEO_SEGMENT_TIME_SECONDS=}")
+        # return
 
         while stream_information is None:
             # When event is set, because the program is shutting down, return.
@@ -65,6 +66,17 @@ class DownloadThread(threading.Thread):
                     stream_url=self.stream_url,
                 )
                 self.event.wait(settings.RETRY_TIME_SECONDS)
+
+        # If stream is not live, do not download it, otherwise that stream will be downloaded a lot faster with FFMpeg
+        # than the other live streams, which could cause problems down the line.
+        # TODO make this configurable and/or handle prerecorded livestreams.
+        if stream_information["is_live"] is False:
+            logger.warning(
+                f"Stream is not live, not downloading this stream.",
+                stream_id=self.stream_id,
+                stream_url=self.stream_url,
+            )
+            return
 
         # Get stream id and stream url to use with FFmpeg and Redis.
         youtube_stream_url = stream_information["url"]
@@ -98,6 +110,7 @@ class DownloadThread(threading.Thread):
                 youtube_stream_url=youtube_stream_url,
             )
 
+            # W
             # Download stream with FFmpeg
             process = subprocess.run(
                 [
@@ -121,8 +134,7 @@ class DownloadThread(threading.Thread):
                     "-strftime",
                     "1",
                     "-segment_list",
-                    f"{settings.SAVE_PATH}/{self.stream_id}/segment_list.txt",
-                    # "-segment_list_flags",
+                    f"{settings.SAVE_PATH}/{self.stream_id}/segment_list.txt",  # "-segment_list_flags",
                     # "+live",
                     f"{settings.SAVE_PATH}/{self.stream_id}/%Y%m%d_%H%M%S.mp4",
                 ]
