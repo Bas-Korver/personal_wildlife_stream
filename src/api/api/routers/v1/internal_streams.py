@@ -10,6 +10,7 @@ from litestar.params import Body
 from models.animal import Animal
 from models.stream import Stream
 from models.stream_animal import StreamAnimal
+from modules.animal_information import get_animal_data
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,7 +73,7 @@ async def store_animals(
 
         # Check if animal already exists in database.
         animal = await animals_repository.get_one_or_none(
-            name=animal_name,
+            common_name=animal_name,
         )
 
         # Check if animal is already linked to stream, if animal already exists.
@@ -90,11 +91,16 @@ async def store_animals(
 
         # Else create animal in database and link it to stream.
         if animal is None:
+            # Get data from external API regarding this animal.
+            animal_data = get_animal_data(animal_name)
+
             # Create animal object in database.
             animal = Animal(
-                name=animal_name,
+                common_name=animal_name,
+                scientific_name=animal_data["scientific_name"],
+                taxonomic_hierarchy=animal_data["hierarchy"],
+                subspecies=animal_data["subspecies"],
             )
-            # TODO: Create API call for extra information about animal.
 
             await animals_repository.add(animal)
             await animals_repository.session.commit()
