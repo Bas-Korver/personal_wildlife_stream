@@ -1,27 +1,21 @@
 import pathlib
 import platform
 import signal
-import structlog
 import threading
 import time
 
-from core.config import settings
-from db.redis_connection import (
-    RedisConnection,
-)
-from modules.audio_extractor import (
-    extract_audio,
-)
-from modules.frame_extractor import (
-    get_frames_from_video,
-)
+from core import settings
+from db import RedisConnection
+from modules import get_frames_from_video, extract_audio, make_logger
 
 # Global variables
 r = RedisConnection().get_redis_client()
-structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
-logger = structlog.get_logger()
 event = threading.Event()
-lock = threading.Lock()
+logger = make_logger()
+
+
+class ServiceExit(Exception):
+    pass
 
 
 class DataExtractor(threading.Thread):
@@ -31,25 +25,30 @@ class DataExtractor(threading.Thread):
 
     def run(self):
         while True:
+            # When event is set, because the program is shutting down, return.
             if self.event.is_set():
                 return
 
             # Get queue element
             try:
-                video_path = pathlib.Path(r.brpop("queue:video_data_extractor", 10)[1])
+                video_file = pathlib.Path(r.brpop("queue:video_data_extractor", 0.1)[1])
             except TypeError:
-                logger.debug(f"Queue is empty, retrying")
+                logger.debug(f"Queue is empty, retrying in {settings.RETRY_TIME}")
+                event.wait(settings.RETRY_TIME_SECONDS)
                 continue
 
             # Save start time.
             start_time = time.time()
 
-            # Get directory and filename.
-            stream_id = video_path.parent.name
-            filename = video_path.stem
+            # Get directory and video_name.
+            video_path = settings.SAVE_PATH / video_file
+            stream_id = video_path.parents[0].name
+            video_name = video_path.stem
 
             logger.debug(
-                f"Video_data_extractor: Got video {stream_id}_{filename} from queue"
+                f"Got video from queue",
+                stream_id=stream_id,
+                video_name=video_name,
             )
 
             # Extract frames from video
@@ -58,7 +57,7 @@ class DataExtractor(threading.Thread):
             )
 
             if not successful:
-                logger.error(f"Failed to extract frames from {video_path}")
+                logger.error(f"Failed to extract frames", video_path=video_path)
                 # TODO: add frames cleanup
                 continue
 
@@ -73,13 +72,14 @@ class DataExtractor(threading.Thread):
             )
 
             # Add video to the queue for level 1 detection
-            r.lpush("queue:level_1_detection_motion", str(video_path))
-            r.lpush("queue:audio_detection", str(video_path))
+            r.lpush("queue:level_1_detection_motion", str(video_file))
+            r.lpush("queue:audio_detection", str(video_file))
 
 
 def handler(signum, frame):
-    logger.info(f"Interrupted by {signum}, shutting down")
-    event.set()  # TODO: add intermediate.ts file cleanup
+    logger.info("Received a stop signal, shutting down")
+    logger.debug("Interrupted by:", signum=signum, signame=signal.Signals(signum).name)
+    raise ServiceExit
 
 
 if __name__ == "__main__":
@@ -94,11 +94,15 @@ if __name__ == "__main__":
     for _ in range(settings.THREAD_COUNT):
         threads.append(DataExtractor(event))
 
-    for thread in threads:
-        thread.start()
+    try:
+        for thread in threads:
+            thread.start()
+            logger.info("Started all threads for video extraction.")
 
-    logger.info("Started all threads for video extraction.")
-
-    for thread in threads:
-        while thread.is_alive():
-            thread.join(1)
+        while True:
+            time.sleep(0.5)
+    except ServiceExit:
+        event.set()
+        for thread in threads:
+            thread.join()
+        logger.info("Stopped all threads for video extraction.")

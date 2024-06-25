@@ -1,15 +1,17 @@
-import cv2
 import os
 import pathlib
-import structlog
 import threading
 
-logger = structlog.get_logger()
+import cv2
+
+from modules import make_logger
+
+logger = make_logger()
 
 
 def get_frames_from_video(
     event: threading.Event,
-    video_path: str | os.PathLike,
+    video_path: os.PathLike | str,
     fps: int = 1,
     frames_to_get: int = 0,
 ):
@@ -41,8 +43,8 @@ def get_frames_from_video(
     fps_interval = video_fps // fps
     frames_to_get = frames_to_get if frames_to_get > 0 else video_frames // fps_interval
 
-    store_path = video_path.parents[0]
-    filename = video_path.stem
+    directory = video_path.parents[0]
+    video_name = video_path.stem
 
     logger.debug(f"Extracting {frames_to_get} frames from {video_path}")
     for frame_i in range(0, video_frames, fps_interval):
@@ -52,7 +54,7 @@ def get_frames_from_video(
         ret, frame = video.read()
 
         if ret:
-            cv2.imwrite(f"{store_path}/{filename}_{frame_i}.png", frame)
+            cv2.imwrite(f"{directory}/{video_name}_{frame_i}.png", frame)
             retrieved_frames += 1
 
     video.release()
