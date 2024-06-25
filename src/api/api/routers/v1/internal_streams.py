@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 from typing import Annotated
 from uuid import UUID
@@ -61,10 +62,10 @@ async def provide_stream_animals_repository(
     )
 
 
-async def save_current_stream(redis, stream_id: UUID, delay: int = 300) -> None:
-    # TODO: Set current stream in redis.
+async def save_current_stream(r, stream_id: UUID, delay: int = 300) -> None:
+    await asyncio.sleep(delay)
 
-    pass
+    await r.set("current_stream_id", str(stream_id))
 
 
 async def store_animals(
@@ -162,7 +163,7 @@ class streamsController(Controller):
             status_code=200,
             background=BackgroundTask(
                 save_current_stream,
-                redis=state.r,
+                r=state.r,
                 stream_id=stream.id,
             ),
         )
