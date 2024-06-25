@@ -1,26 +1,61 @@
 import logging
-import redis
-import structlog
 import sys
-from pydantic import field_validator, ValidationError, model_validator
-from pydantic_settings import BaseSettings
+from datetime import time
+from pathlib import Path
+
+import redis
+import requests
+import structlog
+from pydantic import (
+    field_validator,
+    ValidationError,
+    model_validator,
+    DirectoryPath,
+)
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = structlog.get_logger()
 
 
 class Settings(BaseSettings):
-    PROGRAM_LOG_LEVEL: int = logging.INFO
-    THREAD_COUNT: int = (
-        5  # TODO: make default equal to number of streams that are being processed.
+    model_config = SettingsConfigDict(
+        env_file=str(Path(__file__).resolve().parents[2] / ".env"),
     )
 
+    # Logging config
+    PROGRAM_LOG_LEVEL: int = logging.INFO
+    LOG_PRETTY_PRINT: bool = True
+
+    # Audio detection config
+    THREAD_COUNT: int = 5
     MODEL_CONFIDENCE: float = 0.7
     DETECT_AUDIO_ONLY_AFTER_MOTION: bool = False
+    RETRY_TIME: time = time(0, 0, 10)
+    SAVE_PATH: DirectoryPath
 
+    # Redis config
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_USERNAME: str | None = None
     REDIS_PASSWORD: str | None = None
+
+    # API config
+    API_PRIVATE_TLS: bool = False
+    API_PRIVATE_HOST: str = "localhost"
+    API_PRIVATE_PORT: int = 8001
+
+    @property
+    def RETRY_TIME_SECONDS(self) -> int:
+        return self.RETRY_TIME.second + 60 * (
+            self.RETRY_TIME.minute + 60 * self.RETRY_TIME.hour
+        )
+
+    @property
+    def FULL_PRIVATE_API_URL(self) -> str:
+        if self.API_PRIVATE_TLS:
+            return f"https://{self.API_PRIVATE_HOST}:{self.API_PRIVATE_PORT}"
+        else:
+            return f"http://{self.API_PRIVATE_HOST}:{self.API_PRIVATE_PORT}"
 
     @field_validator("PROGRAM_LOG_LEVEL", mode="before")
     @classmethod
@@ -45,16 +80,46 @@ class Settings(BaseSettings):
         )
         try:
             r.ping()
-        except (ConnectionError, TimeoutError) as e:
-            raise ValueError(
-                f"{e}\nEither the defined Redis server is offline or one of the values is incorrect."
+        except redis.exceptions.AuthenticationError:
+            if self.REDIS_USERNAME or self.REDIS_PASSWORD:
+                log_message = "The given password and/or username are/is incorrect."
+            else:
+                log_message = "The Redis server requires a password and/or a username."
+            logger.exception(log_message)
+            sys.exit(1)
+        except redis.exceptions.ConnectionError:
+            logger.exception(
+                "Either the defined Redis server is offline or the host and/or port are/is incorrect."
             )
+            sys.exit(1)
+        except redis.exceptions.TimeoutError:
+            logger.exception(
+                "The connection to the Redis server timed out. the host address probably points to a non-existing host."
+            )
+            sys.exit(1)
         else:
             r.close()
+        return self
+
+    @model_validator(mode="after")
+    def check_working_api_connection(self):
+        try:
+            requests.get(self.FULL_PRIVATE_API_URL)
+        except requests.exceptions.ConnectionError:
+            logger.exception(
+                "The defined API server is offline or the host and/or port are/is incorrect."
+            )
+            sys.exit(1)
+        except requests.exceptions.Timeout:
+            logger.exception(
+                "The connection to the API server timed out. the host address probably points to a non-existing host."
+            )
+            sys.exit(1)
+        return self
 
 
 try:
-    settings = Settings(_env_file="../.env")
-except ValidationError as e:
-    logger.exception(e)
+    settings = Settings(_env_file=str(Path(__file__).resolve().parents[2] / ".env"))
+except ValidationError:
+    logger.exception("tsjonge tsjonge, wat een zooitje!")
     sys.exit(1)

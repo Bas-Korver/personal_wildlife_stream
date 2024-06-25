@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
-import structlog
+
+from modules import make_logger
 
 # Global variables
-logger = structlog.get_logger()
+logger = make_logger()
 
 
 def motion_detection(

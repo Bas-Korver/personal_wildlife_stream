@@ -1,34 +1,47 @@
 import platform
 import signal
-import structlog
 import threading
+import time
 
-from core.config import settings
-from db.redis_connection import RedisConnection
-from modules.file_streamer import start_stream_file
-from modules.stream_selector import select_streams
-from modules.streamer import start_stream
+from core import settings
+from db import RedisConnection
+from modules import start_stream_file, select_streams, start_stream, make_logger
 
 r = RedisConnection().get_redis_client()
-structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
-logger = structlog.get_logger()
 event = threading.Event()
+logger = make_logger()
 p_streamer = r.pubsub(ignore_subscribe_messages=True)
 p_streamer.subscribe("streamer")
 
 
-def start_threads():
-    stream_selector_thread = threading.Thread(target=select_streams, args=(event,))
-    file_streamer_thread = threading.Thread(target=start_stream_file, args=(event,))
+class ServiceExit(Exception):
+    pass
 
-    # TODO fix streaming
-    # streamer_thread = threading.Thread(
-    #     target=start_stream,
-    #     args=(settings.STREAM_KEY.get_secret_value(), settings.FFMPEG_LOG_LEVEL),
-    # )
+
+def start_threads(threads):
+    threads.extend(
+        [
+            threading.Thread(
+                target=select_streams,
+                args=(event,),
+            ),
+            threading.Thread(
+                target=start_stream_file,
+                args=(event,),
+            ),
+            # TODO fix streaming
+            threading.Thread(
+                target=start_stream,
+                args=(
+                    settings.STREAM_KEY.get_secret_value(),
+                    settings.FFMPEG_LOG_LEVEL,
+                ),
+            ),
+        ]
+    )
 
     logger.debug("Starting stream selector thread.")
-    stream_selector_thread.start()
+    threads[0].start()
 
     while True:
         if event.is_set():
@@ -44,21 +57,20 @@ def start_threads():
             break
 
     logger.info("Starting file streamer thread.")
-    file_streamer_thread.start()
+    threads[1].start()
 
     # Wait to start streamer, this will allow the file_streamer_thread to create a backlog.
     event.wait(300)
     # TODO: Find a more resilient way to stream the stream.ts file and get the youtube live url.
-    # streamer_thread.start()
+    threads[2].start()
 
-    stream_selector_thread.join()
-    file_streamer_thread.join()
-    # streamer_thread.join()
+    return threads
 
 
 def handler(signum, frame):
-    logger.info(f"Interrupted by {signum}, shutting down")
-    event.set()
+    logger.info("Received a stop signal, shutting down")
+    logger.debug("Interrupted by:", signum=signum, signame=signal.Signals(signum).name)
+    raise ServiceExit
 
 
 if __name__ == "__main__":
@@ -66,5 +78,16 @@ if __name__ == "__main__":
         signal.signal(signal.SIGHUP, handler)
     signal.signal(signal.SIGTERM, handler)
     signal.signal(signal.SIGINT, handler)
+    threads = []
 
-    start_threads()
+    try:
+        threads = start_threads(threads)
+        logger.info("Started streamer")
+
+        while True:
+            time.sleep(0.5)
+    except ServiceExit:
+        event.set()
+        for thread in threads:
+            thread.join()
+        logger.info("Stopped streamer")

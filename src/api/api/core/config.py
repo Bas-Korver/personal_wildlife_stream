@@ -20,20 +20,26 @@ class Settings(BaseSettings):
         env_file=str(Path(__file__).resolve().parents[2] / ".env"),
     )
 
+    # Logging config
     PROGRAM_LOG_LEVEL: int = logging.INFO
-    API_KEY: str | None = None
+    LOG_PRETTY_PRINT: bool = True
+
+    # API config
+    CORS_ALLOWED_ORIGINS: list[str] = []
+    WEATHER_API_KEY: str
+
+    # Redis config
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_USERNAME: str | None = None
     REDIS_PASSWORD: str | None = None
+
+    # Postgres config
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_USERNAME: str
     POSTGRES_PASSWORD: str
     POSTGRES_DATABASE: str
-
-    CORS_ALLOWED_ORIGINS: list[str] = []
-    WEATHER_API_KEY: str
 
     @field_validator("PROGRAM_LOG_LEVEL", mode="before")
     @classmethod
@@ -65,8 +71,11 @@ class Settings(BaseSettings):
             )
         else:
             r.close()
+        return self
 
-        # Also check this for Postgres
+    @model_validator(mode="after")
+    def check_working_postgres_connection(self):
+        # Check if connection with Postgres database can be established
         url_object = URL.create(
             "postgresql",
             username=self.POSTGRES_USERNAME,
@@ -86,6 +95,7 @@ class Settings(BaseSettings):
             sys.exit(1)
         else:
             engine.dispose()
+        return self
 
 
 try:

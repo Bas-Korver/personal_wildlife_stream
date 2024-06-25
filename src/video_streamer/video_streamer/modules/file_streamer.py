@@ -2,16 +2,14 @@ import pathlib
 import subprocess
 import time
 
-import structlog
-from db.redis_connection import RedisConnection
-
-from core.config import settings
+from core import settings
+from db import RedisConnection
+from modules import make_logger
 
 # Global variables.
 VIDEO_ITERATION_DELAY = 8.5  # TODO: Test with delay make configurable.
 r = RedisConnection().get_redis_client()
-structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
-logger = structlog.get_logger()
+logger = make_logger()
 p_stream_selector = r.pubsub(ignore_subscribe_messages=True)
 p_stream_selector.subscribe("stream_selector")
 p_streamer = r.pubsub(ignore_subscribe_messages=True)
@@ -25,8 +23,9 @@ def start_stream_file(event):
 
     # Create output file.
     # TODO: make this configurable
-    output_file_path = "../../streams/stream.ts"
-    video_source_path = r.json().get(video_key, ".video_path")
+    output_file_path = settings.SAVE_PATH / "stream.ts"
+    video_file = r.json().get(video_key, ".video_path")
+    video_path = settings.SAVE_PATH / video_file
     subprocess.run(
         [
             "ffmpeg",
@@ -34,7 +33,7 @@ def start_stream_file(event):
             "-loglevel",
             str(settings.FFMPEG_LOG_LEVEL),
             "-i",
-            video_source_path,
+            video_path,
             "-c",
             "copy",
             output_file_path,
@@ -64,7 +63,7 @@ def start_stream_file(event):
                 break
 
         logger.debug(f"Got video key: {video_key}")
-        video_source_path = r.json().get(video_key, ".video_path")
+        video_path = r.json().get(video_key, ".video_path")
 
         # Send message of chosen video.
         r.publish("stream_selector", video_key)
@@ -78,7 +77,7 @@ def start_stream_file(event):
                 "-loglevel",
                 str(settings.FFMPEG_LOG_LEVEL),
                 "-i",
-                video_source_path,
+                video_path,
                 "-c",
                 "copy",
                 "-bsf:v",

@@ -1,17 +1,17 @@
 import glob
 import pathlib
 import time
-
-import structlog
 from datetime import datetime, timedelta
+
 from redis.commands.json.path import Path
 
-from core.config import settings
-from db.redis_connection import RedisConnection
+from core import settings
+from db import RedisConnection
+from modules import make_logger
 
 # Global variables.
 r = RedisConnection().get_redis_client()
-logger = structlog.get_logger()
+logger = make_logger()
 p_stream_selector = r.pubsub(ignore_subscribe_messages=True)
 p_stream_selector.subscribe("stream_selector")
 
@@ -65,6 +65,7 @@ def select_streams(event):
                     f"First batch has been processed, notified streamer to start stream."
                 )
 
+            # TODO: creates errors when only 1 stream is being downloaded
             # Remove files from previous batch.
             if current_available_videos is not None:
                 delete_files(current_available_videos)

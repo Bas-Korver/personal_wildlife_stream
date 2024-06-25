@@ -7,17 +7,16 @@ from pathlib import Path
 
 import cv2
 import requests
-import structlog
 import torch
-from core.config import settings
-from db.redis_connection import RedisConnection
-from modules.image_detection import image_detection
+
+from core import settings
+from db import RedisConnection
+from modules import image_detection, make_logger
 
 # Global variables
 r = RedisConnection().get_redis_client()
-structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
-logger = structlog.get_logger()
 event = threading.Event()
+logger = make_logger()
 
 # Load model
 DEVICE = torch.device(settings.DEVICE)
@@ -26,10 +25,14 @@ MODELS = {}
 DEFAULT_MODEL = torch.hub.load(
     "ultralytics/yolov5",
     "custom",
-    f"{Path(__file__).resolve().parent}/../models/{settings.DEFAULT_MODEL_PATH}",
+    str(settings.DEFAULT_MODEL_PATH),
     force_reload=True,
 )
 DEFAULT_MODEL.to(DEVICE)
+
+
+class ServiceExit(Exception):
+    pass
 
 
 class ImageDetection:
@@ -43,24 +46,32 @@ class ImageDetection:
 
             # Get queue element
             try:
-                video_path = pathlib.Path(
-                    r.brpop("queue:level_2_detection_image", 10)[1]
+                video_file = pathlib.Path(
+                    r.brpop("queue:level_2_detection_image", 0.1)[1]
                 )
             except TypeError:
-                logger.debug(f"Queue is empty, retrying")
+                logger.debug(f"Queue is empty, retrying in {settings.RETRY_TIME}")
+                event.wait(settings.RETRY_TIME_SECONDS)
                 continue
 
             # Save start time.
             start_time = time.time()
 
-            # Get directory and filename for motion detection.
+            # Get directory and video name.
+            video_path = settings.SAVE_PATH / video_file
             directory = video_path.parents[0]
-            filename = video_path.stem
-            stream_id = video_path.parent.name
+            video_name = video_path.stem
+            stream_id = video_path.parents[0].name
+
+            logger.debug(
+                f"Got video from queue",
+                stream_id=stream_id,
+                video_name=video_name,
+            )
 
             # Check desired model for this stream.
             stream_tag = requests.get(
-                f"http://localhost:8003/v1/internal-streams/streams/{stream_id}"  # TODO: Make URL dynamic.
+                f"{settings.FULL_PRIVATE_API_URL}/v1/internal-streams/streams/{stream_id}"  # TODO: Make URL dynamic.
             ).json()["tag"]
             model = MODELS.get(stream_tag["id"])
 
@@ -71,7 +82,9 @@ class ImageDetection:
                     model = torch.hub.load(
                         "ultralytics/yolov5",
                         "custom",
-                        f"{Path(__file__).resolve().parent}/../models/{stream_tag["model"]}",
+                        str(
+                            settings.DEFAULT_MODEL_PATH.parents[0] / stream_tag["model"]
+                        ),
                         force_reload=True,
                     )
                     MODELS[stream_tag["id"]] = model
@@ -82,14 +95,14 @@ class ImageDetection:
                     MODELS[stream_tag["id"]] = model
 
             # Load video data from redis.
-            data = r.json().get(f"video_information:{stream_id}:{filename}")
+            data = r.json().get(f"video_information:{stream_id}:{video_name}")
 
             image_detections = {}
             frame_pngs = None
             if bool(data["motion"]):
                 # Get the saved frames for this video.
                 frame_pngs = sorted(
-                    directory.glob(f"{filename}_*.png"),
+                    directory.glob(f"{video_name}_*.png"),
                     key=lambda x: int(x.stem.rsplit("_", 1)[-1]),
                 )
                 frames = [cv2.imread(str(frame_png)) for frame_png in frame_pngs]
@@ -100,16 +113,19 @@ class ImageDetection:
                     frames,
                     settings.MODEL_CONFIDENCE,
                 )
-                
-            # Save detected animals to API.
-            requests.post(
-                f"http://localhost:8003/v1/internal-streams/streams/{stream_id}/animals", # TODO: Make URL dynamic.
-                json=[{"animal": animal, "count": image_detections[animal]["count"]} for animal in image_detections.keys()]
-            )
+
+                # Save detected animals to API.
+                requests.post(
+                    f"http://localhost:8003/v1/internal-streams/streams/{stream_id}/animals",  # TODO: Make URL dynamic.
+                    json=[
+                        {"animal": animal, "count": image_detections[animal]["count"]}
+                        for animal in image_detections.keys()
+                    ],
+                )
 
             # Save results.
             r.json().set(
-                f"video_information:{stream_id}:{filename}",
+                f"video_information:{stream_id}:{video_name}",
                 ".image_detection",
                 image_detections,
             )
@@ -122,12 +138,12 @@ class ImageDetection:
             )
 
             # Push to next phase of pipeline.
-            r.lrem("queue:video_ranking", 0, str(video_path))
-            r.lpush("queue:video_ranking", str(video_path))
+            r.lrem("queue:video_ranking", 0, str(video_file))
+            r.lpush("queue:video_ranking", str(video_file))
 
             # If the pngs were not loaded in yet, load them in.
             if frame_pngs is None:
-                frame_pngs = directory.glob(f"{filename}_*.png")
+                frame_pngs = directory.glob(f"{video_name}_*.png")
 
             # Delete the pngs for this section.
             for frame_png in frame_pngs:
@@ -135,8 +151,9 @@ class ImageDetection:
 
 
 def handler(signum, frame):
-    logger.info(f"Interrupted by {signum}, shutting down")
-    event.set()
+    logger.info("Received a stop signal, shutting down")
+    logger.debug("Interrupted by:", signum=signum, signame=signal.Signals(signum).name)
+    raise ServiceExit
 
 
 if __name__ == "__main__":
@@ -146,6 +163,13 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, handler)
 
     detection = ImageDetection(event)
-    detection.run()
 
-    logger.info("Started image detection.")
+    try:
+        detection.run()
+        logger.info("Started image detection")
+
+        while True:
+            time.sleep(0.5)
+    except ServiceExit:
+        event.set()
+        logger.info("Stopped image detection.")

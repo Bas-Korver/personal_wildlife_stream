@@ -5,16 +5,19 @@ import threading
 import time
 
 import requests
-import structlog
-from core.config import settings
-from db.redis_connection import RedisConnection
-from modules.detect_birds import detect_birds
+
+from core import settings
+from db import RedisConnection
+from modules import detect_birds, make_logger
 
 # Global variables
 r = RedisConnection().get_redis_client()
-structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
-logger = structlog.get_logger()
 event = threading.Event()
+logger = make_logger()
+
+
+class ServiceExit(Exception):
+    pass
 
 
 class AudioDetection(threading.Thread):
@@ -27,36 +30,37 @@ class AudioDetection(threading.Thread):
             if self.event.is_set():
                 return
 
-            # Check whether to get data after data extraction or after motion detection.
-
             # Get queue element
             try:
-                video_path = pathlib.Path(r.brpop("queue:audio_detection", 10)[1])
+                video_file = pathlib.Path(r.brpop("queue:audio_detection", 0.1)[1])
             except TypeError:
-                logger.debug(f"Queue is empty, retrying")
+                logger.debug(f"Queue is empty, retrying in {settings.RETRY_TIME}")
+                event.wait(settings.RETRY_TIME_SECONDS)
                 continue
 
             # Save start time.
             start_time = time.time()
 
-            # Get directory and filename.
+            # Get directory and video_name.
+            video_path = settings.SAVE_PATH / video_file
             directory = video_path.parents[0]
-            filename = video_path.stem
-            stream_id = video_path.parent.name
+            video_name = video_path.stem
+            stream_id = video_path.parents[0].name
 
             # Load video data from redis.
-            data = r.json().get(f"video_information:{stream_id}:{filename}")
+            data = r.json().get(f"video_information:{stream_id}:{video_name}")
 
             new_data = {}
-
+            # Check whether to get data after data extraction or after motion detection.
             if bool(data["motion"]) or not settings.DETECT_AUDIO_ONLY_AFTER_MOTION:
+                # TODO make endpoint configurable
                 # Get latitude and longitude of the stream.
                 stream_information = requests.get(
-                    f"http://localhost:8003/v1/internal-streams/streams/{stream_id}"  # TODO: Make URL dynamic.
+                    f"{settings.FULL_PRIVATE_API_URL}/v1/internal-streams/streams/{stream_id}"
                 ).json()
 
                 # Detect audio.
-                audio_path = directory / f"{filename}.mp3"
+                audio_path = directory / f"{video_name}.mp3"
                 detections = detect_birds(
                     audio_path,
                     latitude=stream_information["latitude"],
@@ -71,7 +75,7 @@ class AudioDetection(threading.Thread):
 
             # Save results.
             r.json().set(
-                f"video_information:{stream_id}:{filename}",
+                f"video_information:{stream_id}:{video_name}",
                 ".audio_detection",
                 new_data,
             )
@@ -84,13 +88,14 @@ class AudioDetection(threading.Thread):
             )
 
             # Push to next phase of pipeline.
-            r.lrem("queue:video_ranking", 0, str(video_path))
-            r.lpush("queue:video_ranking", str(video_path))
+            r.lrem("queue:video_ranking", 0, str(video_file))
+            r.lpush("queue:video_ranking", str(video_file))
 
 
 def handler(signum, frame):
-    logger.info(f"Interrupted by {signum}, shutting down")
-    event.set()
+    logger.info("Received a stop signal, shutting down")
+    logger.debug("Interrupted by:", signum=signum, signame=signal.Signals(signum).name)
+    raise ServiceExit
 
 
 if __name__ == "__main__":
@@ -103,11 +108,15 @@ if __name__ == "__main__":
     for _ in range(settings.THREAD_COUNT):
         threads.append(AudioDetection(event))
 
-    for thread in threads:
-        thread.start()
+    try:
+        for thread in threads:
+            thread.start()
+            logger.info("Started all threads for audio detection.")
 
-    logger.info("Started all threads for audio detection.")
-
-    for thread in threads:
-        while thread.is_alive():
-            thread.join(1)
+        while True:
+            time.sleep(0.5)
+    except ServiceExit:
+        event.set()
+        for thread in threads:
+            thread.join()
+        logger.info("Stopped all threads for audio detection.")

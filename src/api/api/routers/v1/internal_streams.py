@@ -4,13 +4,13 @@ from uuid import UUID
 
 from litestar import Controller, Response, get, post
 from litestar.background_tasks import BackgroundTask
+from litestar import Controller, get, post, MediaType
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
 from litestar.di import Provide
 from litestar.params import Body
 from models.animal import Animal
 from models.stream import Stream
 from models.stream_animal import StreamAnimal
-from modules.animal_information import get_animal_data
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 

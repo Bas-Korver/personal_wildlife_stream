@@ -1,3 +1,4 @@
+import asyncio
 import subprocess
 from pathlib import Path
 
@@ -5,7 +6,7 @@ import litestar.cli.commands.core
 import uvicorn
 from core import settings
 from db.connector import postgres_connection, redis_connection
-from litestar import Litestar
+from litestar import Litestar, websocket_listener
 from litestar.config.cors import CORSConfig
 from litestar.contrib.sqlalchemy.base import UUIDAuditBase
 from litestar.contrib.sqlalchemy.plugins import (
@@ -28,9 +29,7 @@ from models.stream_animal import StreamAnimal
 from routers import create_router, create_router_private
 from sqlalchemy import URL
 
-# Setup basic logging config
-config = StructLoggingConfig()
-config.set_level(Logger, settings.PROGRAM_LOG_LEVEL)
+
 db_config = postgres_connection()
 
 
@@ -73,7 +72,7 @@ def create_app() -> Litestar:
             ),
         ),
         plugins=[
-            StructlogPlugin(StructlogConfig(config)),
+            StructlogPlugin(),
             SQLAlchemyPlugin(config=db_config),
         ],
         lifespan=[
@@ -108,7 +107,7 @@ def create_app_private() -> Litestar:
             ),
         ),
         plugins=[
-            StructlogPlugin(StructlogConfig(config)),
+            StructlogPlugin(),
             SQLAlchemyPlugin(config=db_config),
         ],
         lifespan=[

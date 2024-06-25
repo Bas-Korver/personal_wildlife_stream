@@ -1,19 +1,21 @@
 import pathlib
 import platform
 import signal
-import structlog
 import threading
 import time
 
-from core.config import settings
-from db.redis_connection import RedisConnection
-from modules.stream_score import stream_score
+from core import settings
+from db import RedisConnection
+from modules import stream_score, make_logger
 
 # Global variables
 r = RedisConnection().get_redis_client()
-structlog.stdlib.recreate_defaults(log_level=settings.PROGRAM_LOG_LEVEL)
-logger = structlog.get_logger()
 event = threading.Event()
+logger = make_logger()
+
+
+class ServiceExit(Exception):
+    pass
 
 
 class StreamRanking(threading.Thread):
@@ -29,48 +31,57 @@ class StreamRanking(threading.Thread):
             # Get queue element
             try:
                 # TODO use LPOS
-                video_path = pathlib.Path(r.brpop("queue:video_ranking", 10)[1])
+                video_file = pathlib.Path(r.brpop("queue:video_ranking", 0.1)[1])
             except TypeError:
-                logger.debug(f"Queue is empty, retrying")
+                logger.debug(f"Queue is empty, retrying in {settings.RETRY_TIME}")
+                event.wait(settings.RETRY_TIME_SECONDS)
                 continue
 
             # Save start time.
             start_time = time.time()
 
-            # Get directory and filename.
-            filename = video_path.stem
-            youtube_id = video_path.parent.name
+            # Get directory and video name.
+            video_path = settings.SAVE_PATH / video_file
+            video_name = video_path.stem
+            stream_id = video_path.parents[0].name
 
             # Load video data from redis.
-            data = r.json().get(f"video_information:{youtube_id}:{filename}")
+            data = r.json().get(f"video_information:{stream_id}:{video_name}")
 
             # Check if stream has image and audio detection results.
             if data["image_detection"] is None or data["audio_detection"] is None:
                 # TODO: add duplicate deletion.
-                r.rpush("queue:video_ranking", str(video_path))
+                r.lrem("queue:video_ranking", 0, str(video_file))
+                r.rpush("queue:video_ranking", str(video_file))
                 continue
 
             # Save stream ranking.
             score = stream_score(
-                youtube_id, data["image_detection"], data["audio_detection"]
+                stream_id, data["image_detection"], data["audio_detection"]
             )
 
             # Save results.
-            r.json().set(f"video_information:{youtube_id}:{filename}", ".score", score)
+            r.json().set(f"video_information:{stream_id}:{video_name}", ".score", score)
 
             # Save processing time.
             r.json().set(
-                f"video_information:{youtube_id}:{video_path.stem}",
+                f"video_information:{stream_id}:{video_path.stem}",
                 ".processing_times.motion_detection",
                 time.time() - start_time,
             )
 
-            logger.debug(f"Saved stream ranking: {youtube_id}:{filename} {score=}")
+            logger.debug(
+                f"Saved stream ranking",
+                stream_id=stream_id,
+                video_name=video_name,
+                score=score,
+            )
 
 
 def handler(signum, frame):
-    logger.info(f"Interrupted by {signum}, shutting down")
-    event.set()
+    logger.info("Received a stop signal, shutting down")
+    logger.debug("Interrupted by:", signum=signum, signame=signal.Signals(signum).name)
+    raise ServiceExit
 
 
 if __name__ == "__main__":
