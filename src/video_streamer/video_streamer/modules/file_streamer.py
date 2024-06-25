@@ -2,10 +2,10 @@ import pathlib
 import subprocess
 import time
 
+import requests
 import structlog
-from db.redis_connection import RedisConnection
-
 from core.config import settings
+from db.redis_connection import RedisConnection
 
 # Global variables.
 VIDEO_ITERATION_DELAY = 8.5  # TODO: Test with delay make configurable.
@@ -145,6 +145,11 @@ def start_stream_file(event):
         # )
 
         logger.debug(f"Time needed to add new file: {time.time() - start_time}")
+
+        # Send request to internal API of current stream being shown.
+        requests.post(
+            f"http://localhost:8003/v1/internal-streams/streams/{stream_id}/current"  # TODO: Make URL configurable, and stream_id correct.
+        )
 
         # Remove intermediate files.
         pathlib.Path(intermediate_file_path).unlink()

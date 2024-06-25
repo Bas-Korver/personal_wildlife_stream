@@ -5,6 +5,7 @@ from uuid import UUID
 from litestar import Controller, Response, get, post
 from litestar.background_tasks import BackgroundTask
 from litestar.contrib.sqlalchemy.repository import SQLAlchemyAsyncRepository
+from litestar.datastructures import State
 from litestar.di import Provide
 from litestar.params import Body
 from models.animal import Animal
@@ -58,6 +59,12 @@ async def provide_stream_animals_repository(
     return StreamAnimalRepository(
         session=db_session,
     )
+
+
+async def save_current_stream(redis, stream_id: UUID, delay: int = 300) -> None:
+    # TODO: Set current stream in redis.
+
+    pass
 
 
 async def store_animals(
@@ -141,6 +148,24 @@ class streamsController(Controller):
         # TODO: Only return relevant data.
 
         return stream
+
+    @post("/streams/{stream_id:uuid}/current")
+    async def set_current_stream(
+        self, state: State, streams_repository: StreamRepository, stream_id: UUID
+    ) -> Response:
+        stream = await streams_repository.get(
+            item_id=stream_id,
+        )
+
+        return Response(
+            f"Set current shown stream to {stream.id}.",
+            status_code=200,
+            background=BackgroundTask(
+                save_current_stream,
+                redis=state.r,
+                stream_id=stream.id,
+            ),
+        )
 
     @post(
         "/streams/{stream_id:uuid}/animals",

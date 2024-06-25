@@ -68,8 +68,10 @@ class StreamsController(Controller):
     dependencies = {"streams_repository": Provide(provide_streams_repository)}
 
     @get("/current")
-    async def get_current_stream(self, db_session: AsyncSession) -> Redirect:
-        # TODO: Get current stream id, instead of first.
+    async def get_current_stream(
+        self, state: State, db_session: AsyncSession
+    ) -> Redirect:
+        # TODO: Get current stream id from Redis, instead of first.
         current_stream_id = (
             (await db_session.execute(select(Stream.id))).scalars().first()
         )
