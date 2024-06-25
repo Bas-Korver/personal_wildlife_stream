@@ -16,7 +16,6 @@ YDL = yt_dlp.YoutubeDL(
     {
         "format": "best[ext=mp4]",
         "quiet": settings.YT_DLP_QUIET,
-        "print": "live_status",
     }
 )
 
@@ -41,10 +40,6 @@ class DownloadThread(threading.Thread):
     def run(self):
         # Do some calculations
         stream_information = None
-
-        # print(settings)
-        # print(f"{settings.RETRY_TIME_SECONDS=}, {settings.VIDEO_SEGMENT_TIME_SECONDS=}")
-        # return
 
         while stream_information is None:
             # When event is set, because the program is shutting down, return.
@@ -134,8 +129,9 @@ class DownloadThread(threading.Thread):
                     "-strftime",
                     "1",
                     "-segment_list",
-                    f"{settings.SAVE_PATH}/{self.stream_id}/segment_list.txt",  # "-segment_list_flags",
-                    # "+live",
+                    f"{settings.SAVE_PATH}/{self.stream_id}/segment_list.txt",
+                    "-segment_list_flags",
+                    "live",
                     f"{settings.SAVE_PATH}/{self.stream_id}/%Y%m%d_%H%M%S.mp4",
                 ]
             )

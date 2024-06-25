@@ -2,17 +2,15 @@ import os
 import pathlib
 from itertools import islice
 
-from poetry.console.commands import self
 from redis.commands.json.path import Path
 from watchdog.events import FileSystemEventHandler
 
 from db import RedisConnection
 from modules import make_logger
 
-logger = make_logger()
-
 # Global variables
 r = RedisConnection().get_redis_client()
+logger = make_logger()
 
 
 class FileModifiedHandler(FileSystemEventHandler):
@@ -32,12 +30,13 @@ class FileModifiedHandler(FileSystemEventHandler):
 
         with open(segment_list_path) as f:
             for file in islice(f, start, None):
+                file = file.rstrip("\n")
                 lines_read += 1
-                video_path = pathlib.Path(f"{stream_path}/{file}")
-                logger.debug("Writing segment to redis.", video_path=str(video_path))
+                video_file = pathlib.Path(f"{stream_path}/{file}")
+                logger.debug("Writing segment to redis.", video_path=video_file)
 
                 data = {
-                    "video_path": str(video_path),
+                    "video_path": str(video_file),
                     "motion": None,
                     "image_detection": None,
                     "audio_detection": None,
@@ -52,17 +51,21 @@ class FileModifiedHandler(FileSystemEventHandler):
                 }
 
                 r.json().set(
-                    f"video_information:{stream_id}:{video_path.stem}",
+                    f"video_information:{stream_id}:{video_file.stem}",
                     Path.root_path(),
                     data,
                 )
                 # Sometimes FFmpeg creates two video fragments at the same time, possibly due to a cache that FFmpeg
                 # directly can download from YouTube. This is not wanted because the video_data_extractor could try to
                 # open the same video twice While it's already removed.
-                r.lrem("queue:video_data_extractor", 0, str(video_path))
+                r.lrem(
+                    "queue:video_data_extractor",
+                    0,
+                    f"{stream_id}\{video_file.name}",
+                )
                 r.lpush(
                     "queue:video_data_extractor",
-                    str(video_path),
+                    f"{stream_id}\{video_file.name}",
                 )
         r.json().set(
             "segment_list_information",

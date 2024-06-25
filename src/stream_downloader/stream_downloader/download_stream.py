@@ -3,7 +3,6 @@ import shutil
 import signal
 import threading
 import time
-from threading import Event
 
 import requests
 from redis.commands.json.path import Path
@@ -11,12 +10,10 @@ from watchdog.observers import Observer
 
 from core import settings
 from db import RedisConnection
-from modules import DownloadThread
-from modules import FileModifiedHandler
-from modules import make_logger
+from modules import DownloadThread, FileModifiedHandler, make_logger
 
 r = RedisConnection().get_redis_client()
-event = Event()
+event = threading.Event()
 logger = make_logger()
 
 

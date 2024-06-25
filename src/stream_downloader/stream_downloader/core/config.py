@@ -4,14 +4,13 @@ from datetime import time
 from pathlib import Path
 
 import redis
+import requests
 import structlog
 from pydantic import (
     DirectoryPath,
     field_validator,
     ValidationError,
     model_validator,
-    AnyHttpUrl,
-    computed_field,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -43,23 +42,20 @@ class Settings(BaseSettings):
     # API config
     API_PRIVATE_TLS: bool = False
     API_PRIVATE_HOST: str = "localhost"
-    API_PRIVATE_PORT: int = 8000
+    API_PRIVATE_PORT: int = 8001
 
-    @computed_field
     @property
     def VIDEO_SEGMENT_TIME_SECONDS(self) -> int:
         return self.VIDEO_SEGMENT_TIME.second + 60 * (
             self.VIDEO_SEGMENT_TIME.minute + 60 * self.VIDEO_SEGMENT_TIME.hour
         )
 
-    @computed_field
     @property
     def RETRY_TIME_SECONDS(self) -> int:
         return self.RETRY_TIME.second + 60 * (
             self.RETRY_TIME.minute + 60 * self.RETRY_TIME.hour
         )
 
-    @computed_field
     @property
     def FULL_PRIVATE_API_URL(self) -> str:
         if self.API_PRIVATE_TLS:
@@ -125,6 +121,22 @@ class Settings(BaseSettings):
             sys.exit(1)
         else:
             r.close()
+        return self
+
+    @model_validator(mode="after")
+    def check_working_api_connection(self):
+        try:
+            requests.get(self.FULL_PRIVATE_API_URL)
+        except requests.exceptions.ConnectionError:
+            logger.exception(
+                "The defined API server is offline or the host and/or port are/is incorrect."
+            )
+            sys.exit(1)
+        except requests.exceptions.Timeout:
+            logger.exception(
+                "The connection to the API server timed out. the host address probably points to a non-existing host."
+            )
+            sys.exit(1)
         return self
 
 
