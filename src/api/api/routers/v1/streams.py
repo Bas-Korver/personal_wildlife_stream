@@ -68,13 +68,15 @@ class StreamsController(Controller):
     dependencies = {"streams_repository": Provide(provide_streams_repository)}
 
     @get("/current")
-    async def get_current_stream(self, db_session: AsyncSession) -> Redirect:
-        # TODO: Get current stream id, instead of first.
-        current_stream_id = (
-            (await db_session.execute(select(Stream.id))).scalars().first()
+    async def get_current_stream(
+        self, state: State, streams_repository: StreamRepository
+    ) -> Redirect:
+        current_stream_id = await state.r.get("current_stream_id")
+        current_stream = await streams_repository.get(
+            item_id=current_stream_id,
         )
 
-        return Redirect(path=f"/v1/streams/{current_stream_id}")
+        return Redirect(path=f"/v1/streams/{current_stream.id}")
 
     @get("/{stream_id:uuid}")
     async def get_stream(

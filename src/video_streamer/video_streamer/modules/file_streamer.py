@@ -5,6 +5,8 @@ import time
 from core import settings
 from db import RedisConnection
 from modules import make_logger
+import requests
+import structlog
 
 # Global variables.
 VIDEO_ITERATION_DELAY = 8.5  # TODO: Test with delay make configurable.
@@ -26,6 +28,7 @@ def start_stream_file(event):
     output_file_path = settings.SAVE_PATH / "stream.ts"
     video_file = r.json().get(video_key, ".video_path")
     video_path = settings.SAVE_PATH / video_file
+    stream_id = video_path.parents[0].name
     subprocess.run(
         [
             "ffmpeg",
@@ -144,6 +147,11 @@ def start_stream_file(event):
         # )
 
         logger.debug(f"Time needed to add new file: {time.time() - start_time}")
+
+        # Send request to internal API of current stream being shown.
+        requests.post(
+            f"http://localhost:8003/v1/internal-streams/streams/{stream_id}/current"  # TODO: Make URL configurable, and stream_id correct.
+        )
 
         # Remove intermediate files.
         pathlib.Path(intermediate_file_path).unlink()
