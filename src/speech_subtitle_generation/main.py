@@ -1,11 +1,11 @@
 import numpy as np
 from PIL import Image
 from TTS.utils.synthesizer import Synthesizer
-from config import Settings
+from config import settings
 from transformers import pipeline
 
 # Initialize caption model.
-CAPTIONER = pipeline("image-to-text", model=Settings.CAPTION_MODEL)  # TODO: Add device.
+CAPTIONER = pipeline("image-to-text", model=settings.CAPTION_MODEL)  # TODO: Add device.
 
 
 def text_generation(frame: np.ndarray, stream_result: dict):
@@ -52,7 +52,7 @@ def speech_generation(text: str, save_path: str):
 
     # Load text to speech model.
     synthesizer = Synthesizer(
-        Settings.TTS_MODEL_PATH.absolute(), Settings.TTS_CONFIG_PATH.absolute()
+        settings.TTS_MODEL_PATH.absolute(), settings.TTS_CONFIG_PATH.absolute()
     )
 
     # Create text to speech based on provided text.

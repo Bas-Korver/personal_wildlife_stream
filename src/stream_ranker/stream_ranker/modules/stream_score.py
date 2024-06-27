@@ -8,9 +8,19 @@ from sklearn.metrics.pairwise import cosine_similarity
 r = RedisConnection().get_redis_client()
 model_path = '../GoogleNews-vectors-negative300.bin'
 word2vec_model = KeyedVectors.load_word2vec_format(model_path, binary=True)
-topic = np.zeros(word2vec_model.vector_size)
-n_streams_topic = 5
 topic_list = []
+
+
+def get_avg_vector(topic):
+    avg_vector = np.zeros(word2vec_model.vector_size)
+    valid_word_count = 0
+    for word in topic:
+        if word in word2vec_model.wv:
+            avg_vector += word2vec_model[word]
+            valid_word_count += 1
+    if valid_word_count > 0:
+        avg_vector /= valid_word_count
+    return avg_vector
 
 def stream_score(stream: str, image_detection: dict, audio_detection: dict) -> float:
     """
@@ -66,6 +76,22 @@ def stream_score(stream: str, image_detection: dict, audio_detection: dict) -> f
         )
 
     # Add to score based on how well it fits the topic
+    # Calculate topic vector
+    raw_recent_streams = r.lrange("stream_history", 0, -1)
+    recent_streams = [item.decode('utf-8') for item in raw_recent_streams]
+    topic_keywords = []
+    for stream in recent_streams:
+        pass  # TODO: extract keywords (animals, detected objects, country) from stream and add it to topic_keywords
+    avg_topic_vector = get_avg_vector(topic_keywords)
 
+
+    # Calculate vector of current snippet
+    avg_snippet_vector = ... # TODO: extract keywords from the current stream that is being evaluated
+
+    # Compute cosine similarity between vectors
+    similarity = word2vec_model.similarity(avg_topic_vector, avg_snippet_vector)
+
+    # Add to score
+    score += similarity * settings.FOLLOW_THEME_WEIGHT
 
     return score

@@ -10,6 +10,7 @@ import structlog
 
 # Global variables.
 VIDEO_ITERATION_DELAY = 8.5  # TODO: Test with delay make configurable.
+topic_length = 5
 r = RedisConnection().get_redis_client()
 logger = make_logger()
 p_stream_selector = r.pubsub(ignore_subscribe_messages=True)
@@ -22,6 +23,8 @@ def start_stream_file(event):
     # Get the highest ranking video at start of the stream.
     video_key = r.rpop("stream_order")
     r.publish("stream_selector", video_key)
+
+    #
 
     # Create output file.
     # TODO: make this configurable
@@ -67,6 +70,12 @@ def start_stream_file(event):
 
         logger.debug(f"Got video key: {video_key}")
         video_path = r.json().get(video_key, ".video_path")
+
+        # Save selected video key to history
+        r.rpush("stream_history", str(video_key))
+        # Remove first element (from the left) if it exceeds a certain length
+        if r.llen("stream_history") > 5:
+            r.lpop("stream_history")
 
         # Send message of chosen video.
         r.publish("stream_selector", video_key)
