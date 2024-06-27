@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     ANIMAL_SURFACE_WEIGHT: float = 10
     AUDIO_CONFIDENCE_WEIGHT: float = 1
     DECREASE_SCORE_WEIGHT: float = 1
+    FOLLOW_THEME_WEIGHT: float = 1
     PENALIZE_STREAM_AFTER_TURNS: int = 0
     RETRY_TIME: time = time(0, 0, 10)
     SAVE_PATH: DirectoryPath

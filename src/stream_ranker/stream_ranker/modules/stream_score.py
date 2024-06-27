@@ -1,8 +1,16 @@
+import numpy as np
 from core import settings
 from db import RedisConnection
+from gensim.downloader import load
+from gensim.models import KeyedVectors
+from sklearn.metrics.pairwise import cosine_similarity
 
 r = RedisConnection().get_redis_client()
-
+model_path = '../GoogleNews-vectors-negative300.bin'
+word2vec_model = KeyedVectors.load_word2vec_format(model_path, binary=True)
+topic = np.zeros(word2vec_model.vector_size)
+n_streams_topic = 5
+topic_list = []
 
 def stream_score(stream: str, image_detection: dict, audio_detection: dict) -> float:
     """
@@ -56,5 +64,8 @@ def stream_score(stream: str, image_detection: dict, audio_detection: dict) -> f
             + (settings.ANIMAL_COUNT_WEIGHT * count)
             + (settings.ANIMAL_SURFACE_WEIGHT * surface)
         )
+
+    # Add to score based on how well it fits the topic
+
 
     return score
