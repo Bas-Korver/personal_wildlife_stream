@@ -4,13 +4,14 @@ from datetime import time
 from pathlib import Path
 
 import redis
+import requests
 import structlog
 from pydantic import (
     DirectoryPath,
     field_validator,
     ValidationError,
     model_validator,
-    SecretStr,
+    FilePath,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -27,11 +28,11 @@ class Settings(BaseSettings):
     LOG_PRETTY_PRINT: bool = True
     FFMPEG_LOG_LEVEL: int = 24
 
-    # Streamer config
-    VIDEO_BATCH_DELTA_TIME: int = 2
-    VIDEO_ITERATION_DELAY: float = 8.5
-    PROCESSED_VIDEOS_FOR_BATCH: float = 0.8
-    STREAM_KEY: SecretStr
+    # Narration and subtitles config
+    DEVICE: str = "cpu"
+    CAPTION_MODEL: str = "Salesforce/blip-image-captioning-base"
+    TTS_CONFIG_PATH: FilePath
+    TTS_MODEL_PATH: FilePath
     RETRY_TIME: time = time(1, 0, 0)
     SAVE_PATH: DirectoryPath
 
@@ -42,14 +43,14 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: str | None = None
 
     @property
-    def VIDEO_SEGMENT_TIME_SECONDS(self) -> int:
-        return self.VIDEO_SEGMENT_TIME.second + 60 * (
-            self.VIDEO_SEGMENT_TIME.minute + 60 * self.VIDEO_SEGMENT_TIME.hour
+    def RETRY_TIME_SECONDS(self) -> int:
+        return self.RETRY_TIME.second + 60 * (
+            self.RETRY_TIME.minute + 60 * self.RETRY_TIME.hour
         )
 
     @field_validator("PROGRAM_LOG_LEVEL", mode="before")
     @classmethod
-    def validate_downloader_debug_level(cls, v) -> int:
+    def validate_program_log_level(cls, v) -> int:
         levels = {
             "critical": logging.CRITICAL,
             "error": logging.ERROR,
@@ -57,12 +58,11 @@ class Settings(BaseSettings):
             "info": logging.INFO,
             "debug": logging.DEBUG,
         }
-
         return levels.get(v, v)
 
     @field_validator("FFMPEG_LOG_LEVEL", mode="before")
     @classmethod
-    def validate_ffmpeg_debug_level(cls, v) -> int:
+    def validate_ffmpeg_log_level(cls, v) -> int:
         levels = {
             "quiet": -8,
             "panic": 0,

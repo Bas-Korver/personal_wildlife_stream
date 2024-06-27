@@ -4,12 +4,14 @@ import threading
 
 import cv2
 
+from db import RedisConnection
 from modules import make_logger
 
+r = RedisConnection().get_redis_client()
 logger = make_logger()
 
 
-def get_frames_from_video(
+def extract_frames(
     event: threading.Event,
     video_path: os.PathLike | str,
     fps: int = 1,
@@ -26,6 +28,8 @@ def get_frames_from_video(
     """
 
     video_path = pathlib.Path(video_path)
+    stream_id = video_path.parents[0].name
+    video_name = video_path.stem
     retrieved_frames = 0
     retries = 0
 
@@ -42,6 +46,18 @@ def get_frames_from_video(
     video_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
     fps_interval = video_fps // fps
     frames_to_get = frames_to_get if frames_to_get > 0 else video_frames // fps_interval
+
+    # Calculate video duration for the SRT subtitle file.
+    video_duration_seconds = video_frames / video_fps
+    hours = int(video_duration_seconds // 3600)
+    minutes = int((video_duration_seconds % 3600) // 60)
+    seconds = int(video_duration_seconds % 60)
+    milliseconds = int((video_duration_seconds - int(video_duration_seconds)) * 1000)
+    video_duration = f"{hours}:{minutes}:{seconds},{milliseconds}"
+
+    r.json().set(
+        f"video_information:{stream_id}:{video_name}", ".video_duration", video_duration
+    )
 
     directory = video_path.parents[0]
     video_name = video_path.stem

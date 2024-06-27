@@ -10,7 +10,7 @@ from watchdog.observers import Observer
 
 from core import settings
 from db import RedisConnection
-from modules import DownloadThread, FileModifiedHandler, make_logger
+from modules import DownloadThread, FileHandler, make_logger
 
 r = RedisConnection().get_redis_client()
 event = threading.Event()
@@ -35,9 +35,13 @@ def start_download_threads(threads):
     # TODO: make it configurable that the stream will only download an n number of streams at the same time and
     #  alternate between active and inactive streams every x amount of time.
     # Create a download thread for each stream.
+    i = 0
     for stream in streams:
         thread = DownloadThread(stream["id"], stream["url"], event)
         threads.append(thread)
+        i += 1
+        if i >= 20:
+            break
 
     # Start all threads.
     for thread in threads:
@@ -49,7 +53,7 @@ def start_download_threads(threads):
 
 def start_file_watcher(observer: Observer):
     # Load event handler and create observer to watch for file changes.
-    event_handler = FileModifiedHandler()
+    event_handler = FileHandler()
     observer.schedule(event_handler, settings.SAVE_PATH, recursive=True)
     observer.start()
 
@@ -66,10 +70,6 @@ def cleanup():
         if "DownloadThread" not in str(threading.enumerate()):
             break
 
-    for item in settings.SAVE_PATH.iterdir():
-        if item.is_dir():
-            shutil.rmtree(item)
-
     # Delete all keys in redis.
     for key in r.scan_iter("queue:*"):
         r.delete(key)
@@ -80,6 +80,10 @@ def cleanup():
     r.delete("stream_information")
     r.delete("segment_list_information")
     r.delete("stream_order")
+
+    for item in settings.SAVE_PATH.iterdir():
+        if item.is_dir():
+            shutil.rmtree(item)
 
 
 def handler(signum, frame):

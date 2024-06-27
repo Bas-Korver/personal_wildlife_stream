@@ -6,7 +6,7 @@ import time
 
 from core import settings
 from db import RedisConnection
-from modules import get_frames_from_video, extract_audio, make_logger
+from modules import extract_frames, extract_audio, make_logger
 
 # Global variables
 r = RedisConnection().get_redis_client()
@@ -42,23 +42,30 @@ class DataExtractor(threading.Thread):
 
             # Get directory and video_name.
             video_path = settings.SAVE_PATH / video_file
+            directory = video_path.parents[0]
             stream_id = video_path.parents[0].name
             video_name = video_path.stem
 
             logger.debug(
                 f"Got video from queue",
+                video_path=video_path,
                 stream_id=stream_id,
                 video_name=video_name,
             )
 
             # Extract frames from video
-            successful = get_frames_from_video(
+            successful = extract_frames(
                 event, video_path, settings.FRAMES_PER_SECOND, settings.FRAMES_TO_GET
             )
 
             if not successful:
                 logger.error(f"Failed to extract frames", video_path=video_path)
-                # TODO: add frames cleanup
+                # Get the saved frames for this video.
+                frame_pngs = directory.glob(f"{video_name}_*.png")
+
+                # Delete the pngs for this section.
+                for frame_png in frame_pngs:
+                    frame_png.unlink()
                 continue
 
             # Extract audio from video
@@ -72,8 +79,8 @@ class DataExtractor(threading.Thread):
             )
 
             # Add video to the queue for level 1 detection
-            r.lpush("queue:level_1_detection_motion", str(video_file))
-            r.lpush("queue:audio_detection", str(video_file))
+            r.lpush("queue:level_1_detection_motion", str(video_file.as_posix()))
+            r.lpush("queue:audio_detection", str(video_file.as_posix()))
 
 
 def handler(signum, frame):

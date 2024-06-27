@@ -130,8 +130,6 @@ class DownloadThread(threading.Thread):
                     "1",
                     "-segment_list",
                     f"{settings.SAVE_PATH}/{self.stream_id}/segment_list.txt",
-                    "-segment_list_flags",
-                    "live",
                     f"{settings.SAVE_PATH}/{self.stream_id}/%Y%m%d_%H%M%S.mp4",
                 ]
             )

@@ -18,7 +18,7 @@ p_stream_selector.subscribe("stream_selector")
 p_streamer = r.pubsub(ignore_subscribe_messages=True)
 p_streamer.subscribe("streamer")
 
-DELTA = timedelta(seconds=settings.VIDEO_BATCH_DELTA_TIME)
+delta = timedelta(seconds=settings.VIDEO_BATCH_DELTA_TIME)
 
 
 def select_streams(event):
@@ -119,7 +119,7 @@ def check_new_batch_available(current_batch):
         # Check if there is no current group or the timestamp falls outside the batch window, to create a new grouping.
         if (
             current_group is None
-            or (timestamp - datetime.strptime(current_group, "%Y%m%d_%H%M%S")) > DELTA
+            or (timestamp - datetime.strptime(current_group, "%Y%m%d_%H%M%S")) > delta
         ):
             # Create new grouping.
             current_group = key.split(":")[-1]
@@ -129,7 +129,7 @@ def check_new_batch_available(current_batch):
         groups[current_group].append(key)
 
     # Get the available batches and check if they fit the desired requirements for a batch.
-    n_streams = len(glob.glob("../../streams/*/"))
+    n_streams = len(glob.glob(f"{settings.SAVE_PATH}/*/"))
     available_batches = [
         batch
         for batch in groups.keys()

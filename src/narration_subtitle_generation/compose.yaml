@@ -1,0 +1,22 @@
+services:
+    narration_subtitle_generation:
+        build:
+          context: .
+          dockerfile: ./docker/prod/Dockerfile
+        image: narration_subtitle_generation
+        environment:
+          - PROGRAM_LOG_LEVEL=debug
+          - FFMPEG_LOG_LEVEL=debug
+          - TTS_CONFIG_PATH=/app/narration_subtitle_generation/core/config.json
+          - TTS_MODEL_PATH=/app/models/david.pth
+          - SAVE_PATH=/app/streams/
+          - REDIS_HOST=10.0.3.230
+          - REDIS_PORT=6379
+          - REDIS_PASSWORD=bfq8*Y659Qfr031DeyKCwHAo9U%OeHl@
+        volumes:
+        - type: bind
+          source: C:/Users/Bas_K/source/repos/personal_wildlife_stream/src/streams/
+          target: /app/streams/
+        - type: bind
+          source: C:/Users/Bas_K/source/repos/personal_wildlife_stream/src/narration_subtitle_generation/models/david.pth
+          target: /app/models/david.pth

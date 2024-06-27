@@ -73,6 +73,11 @@ class AudioDetection(threading.Thread):
                         "confidence": round(detection["confidence"], 4),
                     }
 
+                requests.post(
+                    f"{settings.FULL_PRIVATE_API_URL}/v1/internal-streams/streams/{stream_id}/animals",
+                    json=[{"animal": animal, "count": 1} for animal in new_data.keys()],
+                )
+
             # Save results.
             r.json().set(
                 f"video_information:{stream_id}:{video_name}",
@@ -88,8 +93,8 @@ class AudioDetection(threading.Thread):
             )
 
             # Push to next phase of pipeline.
-            r.lrem("queue:video_ranking", 0, str(video_file))
-            r.lpush("queue:video_ranking", str(video_file))
+            r.lrem("queue:video_ranking", 0, str(video_file.as_posix()))
+            r.lpush("queue:video_ranking", str(video_file.as_posix()))
 
 
 def handler(signum, frame):

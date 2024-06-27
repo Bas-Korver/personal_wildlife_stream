@@ -16,6 +16,8 @@ from models.stream_animal import StreamAnimal
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from modules.animal_information import get_animal_data
+
 
 class StreamBasic(BaseModel):
     model_config = {"from_attributes": True}

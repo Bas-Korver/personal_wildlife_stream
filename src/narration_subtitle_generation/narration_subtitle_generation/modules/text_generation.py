@@ -1,14 +1,16 @@
 import numpy as np
 from PIL import Image
-from TTS.utils.synthesizer import Synthesizer
-from config import Settings
 from transformers import pipeline
 
+from core import settings
+
 # Initialize caption model.
-CAPTIONER = pipeline("image-to-text", model=Settings.CAPTION_MODEL)  # TODO: Add device.
+captioner = pipeline(
+    "image-to-text", model=settings.CAPTION_MODEL, device=settings.DEVICE
+)  # TODO: Add device.
 
 
-def text_generation(frame: np.ndarray, stream_result: dict):
+def text_generation(frame: np.ndarray, stream_result: dict) -> str:
     """
     Generate text from a single frame using a captioning model.
 
@@ -21,7 +23,7 @@ def text_generation(frame: np.ndarray, stream_result: dict):
     image = Image.fromarray(frame)
 
     # Generate text from the image.
-    result = CAPTIONER(image)
+    result = captioner(image)
     generated_text = result[0]["generated_text"]
 
     # Check if any animals in the caption is repeated.
@@ -39,26 +41,3 @@ def text_generation(frame: np.ndarray, stream_result: dict):
         caption = "The animals we can see here are: " + ", ".join(matching_animals)
 
     return caption
-
-
-def speech_generation(text: str, save_path: str):
-    """
-    Generate text to speech for the given text.
-
-    :param text: text to use for text to speech.
-    :param save_path: path to save the generated text to.
-    :return: generated text to speech wavs.
-    """
-
-    # Load text to speech model.
-    synthesizer = Synthesizer(
-        Settings.TTS_MODEL_PATH.absolute(), Settings.TTS_CONFIG_PATH.absolute()
-    )
-
-    # Create text to speech based on provided text.
-    wavs = synthesizer.tts(text)
-
-    # Save text to speech to provided save path.
-    synthesizer.save_wav(wavs, save_path)
-
-    return wavs

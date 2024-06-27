@@ -9,7 +9,6 @@ import requests
 import structlog
 
 # Global variables.
-VIDEO_ITERATION_DELAY = 8.5  # TODO: Test with delay make configurable.
 r = RedisConnection().get_redis_client()
 logger = make_logger()
 p_stream_selector = r.pubsub(ignore_subscribe_messages=True)
@@ -24,7 +23,6 @@ def start_stream_file(event):
     r.publish("stream_selector", video_key)
 
     # Create output file.
-    # TODO: make this configurable
     output_file_path = settings.SAVE_PATH / "stream.ts"
     video_file = r.json().get(video_key, ".video_path")
     video_path = settings.SAVE_PATH / video_file
@@ -51,7 +49,7 @@ def start_stream_file(event):
         start_time = time.time()
 
         # Get highest ranking video.
-        max_retries = 3
+        max_retries = 5
         for i in range(max_retries):
             try:
                 video_key = r.brpop("stream_order", 10)[1]
@@ -132,19 +130,6 @@ def start_stream_file(event):
                 output_file_path,
             ]
         )
-        # subprocess.run(
-        #     [
-        #         "ffmpeg",
-        #         "-loglevel",
-        #         str(settings.FFMPEG_LOG_LEVEL),
-        #         "-y",
-        #         "-i",
-        #         f"concat:{intermediate_file_path}|intermediate_stream.ts",
-        #         "-c",
-        #         "copy",
-        #         f"{output_file_path}",
-        #     ]
-        # )
 
         logger.debug(f"Time needed to add new file: {time.time() - start_time}")
 
@@ -158,6 +143,8 @@ def start_stream_file(event):
         pathlib.Path()
 
         # Sleep for remaining time.
-        sleep_time = max((0, VIDEO_ITERATION_DELAY - (time.time() - start_time)))
+        sleep_time = max(
+            (0, settings.VIDEO_ITERATION_DELAY - (time.time() - start_time))
+        )
         logger.debug(f"Sleeping for {sleep_time} seconds.")
         time.sleep(sleep_time)

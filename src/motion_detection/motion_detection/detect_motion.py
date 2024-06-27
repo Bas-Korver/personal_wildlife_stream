@@ -51,6 +51,7 @@ class MotionDetection(threading.Thread):
 
             logger.debug(
                 f"Got video from queue",
+                video_path=video_path,
                 stream_id=stream_id,
                 video_name=video_name,
             )
@@ -88,7 +89,7 @@ class MotionDetection(threading.Thread):
             )
 
             # Push to next level.
-            r.lpush("queue:level_2_detection_image", str(video_file))
+            r.lpush("queue:level_2_detection_image", str(video_file.as_posix()))
 
 
 def handler(signum, frame):

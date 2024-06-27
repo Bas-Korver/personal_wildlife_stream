@@ -13,11 +13,11 @@ r = RedisConnection().get_redis_client()
 logger = make_logger()
 
 
-class FileModifiedHandler(FileSystemEventHandler):
-    def on_modified(self, event):
+class FileHandler(FileSystemEventHandler):
+    def on_any_event(self, event):
         path = pathlib.Path(event.src_path)
         if not event.is_directory and path.suffix == ".txt":
-            logger.debug("Segment list file modified.", path=path)
+            logger.debug(f"Segment list file {event.event_type}.", path=path)
             self.write_to_redis(path)
 
     @staticmethod
@@ -36,18 +36,14 @@ class FileModifiedHandler(FileSystemEventHandler):
                 logger.debug("Writing segment to redis.", video_path=video_file)
 
                 data = {
-                    "video_path": str(video_file),
+                    "video_path": str(video_file.as_posix()),
+                    "video_duration": None,
                     "motion": None,
-                    "image_detection": None,
                     "audio_detection": None,
+                    "image_detection": None,
+                    "narration_subtitle": None,
                     "score": None,
-                    "processing_times": {
-                        "data_extractor": None,
-                        "motion_detection": None,
-                        "audio_detection": None,
-                        "image_detection": None,
-                        "ranker": None,
-                    },
+                    "processing_times": {},
                 }
 
                 r.json().set(
@@ -61,11 +57,11 @@ class FileModifiedHandler(FileSystemEventHandler):
                 r.lrem(
                     "queue:video_data_extractor",
                     0,
-                    f"{stream_id}\{video_file.name}",
+                    f"{stream_id}/{video_file.name}",
                 )
                 r.lpush(
                     "queue:video_data_extractor",
-                    f"{stream_id}\{video_file.name}",
+                    f"{stream_id}/{video_file.name}",
                 )
         r.json().set(
             "segment_list_information",

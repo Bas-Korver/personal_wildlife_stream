@@ -42,6 +42,7 @@ class StreamRanking(threading.Thread):
 
             # Get directory and video name.
             video_path = settings.SAVE_PATH / video_file
+            directory = video_path.parents[0]
             video_name = video_path.stem
             stream_id = video_path.parents[0].name
 
@@ -49,10 +50,10 @@ class StreamRanking(threading.Thread):
             data = r.json().get(f"video_information:{stream_id}:{video_name}")
 
             # Check if stream has image and audio detection results.
-            if data["image_detection"] is None or data["audio_detection"] is None:
-                # TODO: add duplicate deletion.
-                r.lrem("queue:video_ranking", 0, str(video_file))
-                r.rpush("queue:video_ranking", str(video_file))
+            # if data["image_detection"] is None or data["audio_detection"] is None:
+            if data["image_detection"] is None or data["narration_subtitle"] is None:
+                r.lrem("queue:video_ranking", 0, str(video_file.as_posix()))
+                r.rpush("queue:video_ranking", str(video_file.as_posix()))
                 continue
 
             # Save stream ranking.
@@ -76,6 +77,13 @@ class StreamRanking(threading.Thread):
                 video_name=video_name,
                 score=score,
             )
+
+            # Get the saved frames for this video.
+            frame_pngs = directory.glob(f"{video_name}_*.png")
+
+            # Delete the pngs for this section.
+            for frame_png in frame_pngs:
+                frame_png.unlink()
 
 
 def handler(signum, frame):

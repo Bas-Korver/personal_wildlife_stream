@@ -1,0 +1,30 @@
+[tool.poetry]
+package-mode = false
+name = "narration-subtitle-generation"
+version = "0.1.0"
+description = "Generates narration and subtitles for the video fragments"
+authors = [
+    "Bas Körver <bas_korver@outlook.com>",
+    "CedricCortenraede <c.cortenraede@outlook.com>",
+    "cemysh <tcvetkovanna@gmail.com>",
+    "Jules Zeelen <jules.zeelen@hotmail.nl>",
+    "KSandfort <konstantin.sandfort@gmail.com>",
+    "Muradohi <muradohi96@gmail.com>",
+]
+license = "GPL-3.0-only"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9.0,<3.12"
+structlog = "^24.1.0"
+redis = "^5.0.1"
+pydantic-settings = "^2.1.0"
+transformers = "^4.42.0"
+tts = "^0.22.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.12.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

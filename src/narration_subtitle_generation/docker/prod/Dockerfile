@@ -23,12 +23,12 @@ ENV VIRTUAL_ENV=/app/.venv \
 
 RUN --mount=type=cache,target=$APT_CACHE_DIR \
     apt-get update --fix-missing \
-    && apt-get install -y --no-install-recommends ffmpeg \
+    && apt-get install -y --no-install-recommends ffmpeg espeak \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-COPY ./stream_downloader /app/stream_downloader
-WORKDIR /app/stream_downloader
+COPY ./narration_subtitle_generation /app/narration_subtitle_generation
+WORKDIR /app/narration_subtitle_generation
 
-ENTRYPOINT ["python", "-m", "download_stream"]
+ENTRYPOINT ["python", "-m", "generate_narration_subtitle"]

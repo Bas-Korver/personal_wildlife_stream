@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     RETRY_TIME: time = time(0, 0, 10)
     SAVE_PATH: DirectoryPath
 
+    # Narration and subtitle config
+    ADD_NARRATION_SUBTITLES: bool = True
+
     # Redis config
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
