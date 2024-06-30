@@ -1,4 +1,7 @@
+# Updated README.MD coming soon
 # personal-wildlife-stream
+# Pre-trained models
+https://drive.google.com/drive/folders/11ub6nYI4LiE4_h7YukXsfimoeGzcWq6V?usp=sharing
 ## Installation
 1. To setup Redis. see https://redis.io/docs/install/install-redis/ or https://redis.io/docs/install/install-stack/docker/
 2. Install FFmpeg, see https://ffmpeg.org/download.html
